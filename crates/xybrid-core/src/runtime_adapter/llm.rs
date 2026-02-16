@@ -319,24 +319,17 @@ impl LlmRuntimeAdapter {
     }
 }
 
-impl RuntimeAdapter for LlmRuntimeAdapter {
-    fn name(&self) -> &str {
-        "llm"
-    }
-
-    fn supported_formats(&self) -> Vec<&'static str> {
-        self.backend.supported_formats()
-    }
-
-    fn load_model(&mut self, path: &str) -> AdapterResult<()> {
+impl LlmRuntimeAdapter {
+    /// Load a model with a full LlmConfig, preserving context_length and other settings.
+    pub fn load_model_with_config(&mut self, config: &LlmConfig) -> AdapterResult<()> {
+        let path = &config.model_path;
         let model_path = Path::new(path);
 
         if !model_path.exists() {
             return Err(AdapterError::ModelNotFound(path.to_string()));
         }
 
-        let config = LlmConfig::new(path);
-        self.backend.load(&config)?;
+        self.backend.load(config)?;
 
         let model_id = self.extract_model_id(path);
 
@@ -359,6 +352,20 @@ impl RuntimeAdapter for LlmRuntimeAdapter {
 
         self.current_model_path = Some(path.to_string());
         Ok(())
+    }
+}
+
+impl RuntimeAdapter for LlmRuntimeAdapter {
+    fn name(&self) -> &str {
+        "llm"
+    }
+
+    fn supported_formats(&self) -> Vec<&'static str> {
+        self.backend.supported_formats()
+    }
+
+    fn load_model(&mut self, path: &str) -> AdapterResult<()> {
+        self.load_model_with_config(&LlmConfig::new(path))
     }
 
     fn execute(&self, input: &Envelope) -> AdapterResult<Envelope> {

@@ -777,7 +777,7 @@ impl TemplateExecutor {
             }
 
             let mut adapter = LlmRuntimeAdapter::with_backend_hint(backend_hint)?;
-            adapter.load_model(&config.model_path)?;
+            adapter.load_model_with_config(&config)?;
             self.llm_adapter_cache = Some((model_path_str.clone(), adapter));
         }
 
@@ -892,7 +892,7 @@ impl TemplateExecutor {
             let config = LlmConfig::new(model_path_str.clone()).with_context_length(context_length);
 
             let mut adapter = LlmRuntimeAdapter::with_backend_hint(backend_hint)?;
-            adapter.load_model(&config.model_path)?;
+            adapter.load_model_with_config(&config)?;
             self.llm_adapter_cache = Some((model_path_str.clone(), adapter));
         }
 
@@ -976,7 +976,7 @@ impl TemplateExecutor {
             let config = LlmConfig::new(model_path_str.clone()).with_context_length(context_length);
 
             let mut adapter = LlmRuntimeAdapter::with_backend_hint(backend_hint)?;
-            adapter.load_model(&config.model_path)?;
+            adapter.load_model_with_config(&config)?;
             self.llm_adapter_cache = Some((model_path_str.clone(), adapter));
         }
 
@@ -1084,7 +1084,7 @@ impl TemplateExecutor {
 
             // Create adapter with the appropriate backend based on hint
             let mut adapter = LlmRuntimeAdapter::with_backend_hint(backend_hint)?;
-            adapter.load_model(&config.model_path)?;
+            adapter.load_model_with_config(&config)?;
 
             // Cache the adapter
             self.llm_adapter_cache = Some((model_path_str.clone(), adapter));

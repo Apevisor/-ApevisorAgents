@@ -30,21 +30,21 @@ use crate::runtime_adapter::llm::{
     ChatMessage, GenerationConfig, GenerationOutput, LlmBackend, LlmConfig, LlmResult,
 };
 use crate::runtime_adapter::AdapterError;
-#[cfg(feature = "llm-llamacpp")]
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 #[cfg(feature = "llm-llamacpp")]
 use std::sync::Once;
 
 /// Ensures llama_backend_init() is called exactly once, regardless of how many
 /// LlamaCppBackend instances are created.
+///
+/// Note: We intentionally never call llama_backend_free(). The `Once` guard
+/// cannot be re-armed, so if we freed the backend when the last instance drops
+/// and then created a new instance (e.g., during model swap), the backend
+/// would NOT be re-initialized — causing undefined behavior. Since
+/// llama_backend_free() only cleans up NUMA info (a no-op on most platforms),
+/// skipping it is safe. The OS reclaims all resources at process exit.
 #[cfg(feature = "llm-llamacpp")]
 static BACKEND_INIT: Once = Once::new();
-
-/// Tracks the number of live LlamaCppBackend instances. When the last one drops,
-/// llama_backend_free() is called to clean up global state.
-#[cfg(feature = "llm-llamacpp")]
-static BACKEND_REFCOUNT: AtomicUsize = AtomicUsize::new(0);
 
 /// LlamaCppBackend - LLM inference using llama.cpp.
 ///
@@ -89,7 +89,6 @@ impl LlamaCppBackend {
         BACKEND_INIT.call_once(|| {
             sys::llama_backend_init();
         });
-        BACKEND_REFCOUNT.fetch_add(1, Ordering::Relaxed);
 
         Ok(Self {
             model: None,
@@ -108,10 +107,8 @@ impl Drop for LlamaCppBackend {
         let _ = self.context.get_mut().unwrap().take(); // drops LlamaContext
         let _ = self.model.take(); // drops LlamaModel
 
-        // Free the global backend when the last instance is dropped.
-        if BACKEND_REFCOUNT.fetch_sub(1, Ordering::AcqRel) == 1 {
-            sys::llama_backend_free();
-        }
+        // Note: We intentionally do NOT call llama_backend_free() here.
+        // See BACKEND_INIT comment for rationale.
     }
 }
 
