@@ -344,6 +344,43 @@ jobs:
           dart run bin/build_tool.dart precompile-binaries $ARGS
 
   #
+  # Publish Flutter SDK to pub.dev (OIDC — zero secrets)
+  # Uses dart-lang/setup-dart reusable workflow for automatic OIDC token exchange.
+  # This job does NOT block the GitHub Release — failure only affects pub.dev publishing.
+  #
+  # Fallback inline job (if reusable workflow doesn't support working-directory):
+  #   publish-flutter:
+  #     name: Publish Flutter to pub.dev
+  #     needs: [precompile-flutter]
+  #     runs-on: ubuntu-latest
+  #     permissions:
+  #       id-token: write
+  #     steps:
+  #       - uses: actions/checkout@v4
+  #       - uses: subosito/flutter-action@v2
+  #         with:
+  #           flutter-version: '3.35.7'
+  #       - run: dart pub publish --force
+  #         working-directory: bindings/flutter
+  #
+  publish-flutter:
+    name: Publish Flutter to pub.dev
+    needs: [precompile-flutter]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Publish to pub.dev
+        working-directory: bindings/flutter
+        run: dart pub publish --force
+
+  #
   # CLI builds (cross-platform matrix)
   #
   build-cli:

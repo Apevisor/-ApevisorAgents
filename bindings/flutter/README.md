@@ -2,19 +2,22 @@
 
 Flutter SDK for the Xybrid universal AI inference runtime. Execute AI pipelines on-device with intelligent local/cloud routing.
 
-## Features
-
-- **Pipeline Execution**: Run AI inference pipelines defined in YAML
-- **Audio Processing**: Record audio and run speech-to-text models
-- **Real-time Streaming**: Real-time ASR with `XybridStreamer`
-- **Real-time Telemetry**: Stream pipeline execution events for monitoring
-- **Envelope System**: Type-safe data passing (Audio, Text, Embedding)
-- **Device Intelligence**: Hardware capabilities detection (GPU, NPU, memory, thermal)
-- **Cross-platform**: Supports iOS, macOS, Android, Linux, and Windows
-
 ## Installation
 
-Add to your `pubspec.yaml`:
+### From pub.dev (recommended)
+
+```bash
+flutter pub add xybrid_flutter
+```
+
+Or add to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  xybrid_flutter: ^0.1.0
+```
+
+### From Git (unreleased changes)
 
 ```yaml
 dependencies:
@@ -25,13 +28,23 @@ dependencies:
       path: bindings/flutter
 ```
 
-Or for local development:
+### From local path (development)
 
 ```yaml
 dependencies:
   xybrid_flutter:
-     path: ../../bindings/flutter
+    path: ../../bindings/flutter
 ```
+
+## Features
+
+- **Pipeline Execution**: Run AI inference pipelines defined in YAML
+- **Audio Processing**: Record audio and run speech-to-text models
+- **Real-time Streaming**: Real-time ASR with `XybridStreamer`
+- **Real-time Telemetry**: Stream pipeline execution events for monitoring
+- **Envelope System**: Type-safe data passing (Audio, Text, Embedding)
+- **Device Intelligence**: Hardware capabilities detection (GPU, NPU, memory, thermal)
+- **Cross-platform**: Supports iOS, macOS, Android, Linux, and Windows
 
 ### Platform Requirements
 

@@ -1,0 +1,30 @@
+# Build artifacts
+rust/target/
+build/
+.dart_tool/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+
+# Git & CI
+.git/
+.github/
+
+# Claude config
+.claude/
+
+# Lock files (consumers generate their own)
+pubspec.lock
+**/pubspec.lock
+
+# Cargokit build artifacts (but keep build scripts and hash-relevant files)
+cargokit/build_tool/.dart_tool/
+
+# Test artifacts
+coverage/
+test_driver/
