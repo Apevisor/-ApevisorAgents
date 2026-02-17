@@ -79,7 +79,7 @@ class XybridRustLib
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 454947523;
+  int get rustContentHash => 127840300;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -225,6 +225,8 @@ abstract class XybridRustLibApi extends BaseApi {
   void crateApiSdkClientXybridSdkClientInitSdkCacheDir({
     required String cacheDir,
   });
+
+  bool crateApiSdkClientXybridSdkClientIsModelCached({required String modelId});
 
   void crateApiSdkClientXybridSdkClientSetApiKey({required String apiKey});
 
@@ -1405,13 +1407,41 @@ class XybridRustLibApiImpl extends XybridRustLibApiImplPlatform
       );
 
   @override
+  bool crateApiSdkClientXybridSdkClientIsModelCached({
+    required String modelId,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(modelId, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiSdkClientXybridSdkClientIsModelCachedConstMeta,
+        argValues: [modelId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiSdkClientXybridSdkClientIsModelCachedConstMeta =>
+      const TaskConstMeta(
+        debugName: "XybridSdkClient_is_model_cached",
+        argNames: ["modelId"],
+      );
+
+  @override
   void crateApiSdkClientXybridSdkClientSetApiKey({required String apiKey}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(apiKey, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 36)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,

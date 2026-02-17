@@ -17,6 +17,16 @@ abstract class XybridSdkClient implements RustOpaqueInterface {
       .api
       .crateApiSdkClientXybridSdkClientInitSdkCacheDir(cacheDir: cacheDir);
 
+  /// Check if a model is cached locally (extracted and ready to use).
+  ///
+  /// This is a pure filesystem check — no network access required.
+  /// Returns `true` if the model has been downloaded and extracted
+  /// at `~/.xybrid/cache/extracted/{model_id}/model_metadata.json`.
+  static bool isModelCached({required String modelId}) => XybridRustLib
+      .instance
+      .api
+      .crateApiSdkClientXybridSdkClientIsModelCached(modelId: modelId);
+
   static void setApiKey({required String apiKey}) => XybridRustLib.instance.api
       .crateApiSdkClientXybridSdkClientSetApiKey(apiKey: apiKey);
 }

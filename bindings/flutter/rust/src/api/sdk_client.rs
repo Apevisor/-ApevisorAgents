@@ -13,4 +13,17 @@ impl XybridSdkClient {
     pub fn set_api_key(api_key: &str) {
         xybrid_sdk::set_api_key(api_key);
     }
+
+    /// Check if a model is cached locally (extracted and ready to use).
+    ///
+    /// This is a pure filesystem check — no network access required.
+    /// Returns `true` if the model has been downloaded and extracted
+    /// at `~/.xybrid/cache/extracted/{model_id}/model_metadata.json`.
+    #[frb(sync)]
+    pub fn is_model_cached(model_id: &str) -> bool {
+        if let Ok(client) = xybrid_sdk::RegistryClient::from_env() {
+            return client.is_extracted(model_id);
+        }
+        false
+    }
 }

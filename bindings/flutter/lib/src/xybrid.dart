@@ -97,6 +97,24 @@ class Xybrid {
     XybridSdkClient.setApiKey(apiKey: apiKey);
   }
 
+  /// Check if a model is cached locally (extracted and ready to use).
+  ///
+  /// This is a pure filesystem check — no network access required.
+  /// Returns `true` if the model has been previously downloaded and extracted.
+  ///
+  /// Use this to check model availability without triggering a download:
+  /// ```dart
+  /// if (Xybrid.isModelCached('kokoro-82m')) {
+  ///   // Model is ready, can load instantly
+  ///   final model = await Xybrid.model('kokoro-82m').load();
+  /// } else {
+  ///   // Model needs to be downloaded first
+  /// }
+  /// ```
+  static bool isModelCached(String modelId) {
+    return XybridSdkClient.isModelCached(modelId: modelId);
+  }
+
   static void initTelemetry() {
     // TODO - Implement telemetry
     // XybridSdkClient.enableTelemetry();
