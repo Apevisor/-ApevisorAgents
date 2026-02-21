@@ -27,7 +27,7 @@
 <p align="center">
   <a href="https://docs.xybrid.dev">Documentation</a> ·
   <a href="#sdks">SDKs</a> ·
-  <a href="#supported-models">Models</a> ·
+  <a href="https://www.xybrid.ai/models">Models</a> ·
   <a href="https://discord.gg/cgd3tbFPWx">Join Discord</a> ·
   <a href="https://github.com/xybrid-ai/xybrid/issues">Issues</a>
 </p>
