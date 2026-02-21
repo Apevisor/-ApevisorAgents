@@ -1,0 +1,303 @@
+# API Surface Contract
+# Machine-readable companion to API_REFERENCE.md
+#
+# This file is parsed by tools/scripts/api-contract-check.sh and the /sync-api command.
+# Status values: implemented, partial, stub, planned
+#
+# IMPORTANT: When modifying SDK public APIs, update BOTH this file and API_REFERENCE.md.
+
+version: "0.1.0"
+
+classes:
+
+  # -------------------------------------------------------------------
+  # 1. Xybrid (Entry Point)
+  # -------------------------------------------------------------------
+  Xybrid:
+    type: singleton
+    section: "1. Xybrid (Entry Point)"
+    methods:
+      init:
+        async: true
+        status: { dart: implemented, kotlin: implemented, swift: planned, csharp: implemented }
+      setApiKey:
+        params: [{ name: apiKey, type: String }]
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+      model:
+        params:
+          - { name: modelId, type: "String?" }
+          - { name: platform, type: "String?" }
+          - { name: bundlePath, type: "String?" }
+          - { name: modelDir, type: "String?" }
+        return: XybridModelLoader
+        status: { dart: implemented, kotlin: implemented, swift: planned, csharp: implemented }
+      pipeline:
+        params:
+          - { name: yaml, type: "String?" }
+          - { name: filePath, type: "String?" }
+        return: XybridPipelineRef
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+      isModelCached:
+        params: [{ name: modelId, type: String }]
+        return: bool
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+
+  # -------------------------------------------------------------------
+  # 2. XybridModelLoader
+  # -------------------------------------------------------------------
+  XybridModelLoader:
+    type: class
+    section: "2. XybridModelLoader"
+    methods:
+      fromRegistry:
+        static: true
+        params: [{ name: modelId, type: String }]
+        return: XybridModelLoader
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      fromBundle:
+        static: true
+        params: [{ name: path, type: String }]
+        return: XybridModelLoader
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      load:
+        async: true
+        return: XybridModel
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      loadWithProgress:
+        return: "Stream<LoadEvent>"
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+
+  # -------------------------------------------------------------------
+  # 3. XybridModel
+  # -------------------------------------------------------------------
+  XybridModel:
+    type: class
+    section: "3. XybridModel"
+    properties:
+      modelId:
+        type: String
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      voices:
+        type: "List<VoiceInfo>?"
+        status: { dart: planned, kotlin: implemented, swift: planned, csharp: implemented }
+      defaultVoice:
+        type: "VoiceInfo?"
+        status: { dart: planned, kotlin: implemented, swift: planned, csharp: implemented }
+      hasVoices:
+        type: bool
+        status: { dart: planned, kotlin: implemented, swift: planned, csharp: implemented }
+    methods:
+      voice:
+        params: [{ name: voiceId, type: String }]
+        return: "VoiceInfo?"
+        status: { dart: planned, kotlin: implemented, swift: planned, csharp: implemented }
+      run:
+        async: true
+        params: [{ name: envelope, type: Envelope }]
+        return: XybridResult
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      runWithContext:
+        async: true
+        params:
+          - { name: envelope, type: Envelope }
+          - { name: context, type: ConversationContext }
+        return: XybridResult
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      runStreaming:
+        params:
+          - { name: envelope, type: Envelope }
+          - { name: config, type: "GenerationConfig?" }
+        return: "Stream<StreamToken>"
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: implemented }
+      runStreamingWithContext:
+        params:
+          - { name: envelope, type: Envelope }
+          - { name: context, type: ConversationContext }
+          - { name: config, type: "GenerationConfig?" }
+        return: "Stream<StreamToken>"
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: implemented }
+      benchmark:
+        async: true
+        status: { dart: planned, kotlin: planned, swift: planned, csharp: planned }
+      unload:
+        status: { dart: planned, kotlin: planned, swift: planned, csharp: planned }
+      executionProviderInfo:
+        return: ExecutionProviderInfo
+        status: { dart: planned, kotlin: planned, swift: planned, csharp: planned }
+
+  # -------------------------------------------------------------------
+  # 4. XybridPipeline
+  # -------------------------------------------------------------------
+  XybridPipeline:
+    type: class
+    section: "4. XybridPipelineRef / XybridPipeline"
+    methods:
+      fromYaml:
+        static: true
+        params: [{ name: yamlContent, type: String }]
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+      fromFile:
+        static: true
+        params: [{ name: path, type: String }]
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+      fromBundle:
+        static: true
+        params: [{ name: path, type: String }]
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+      load:
+        async: true
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+      run:
+        async: true
+        params: [{ name: envelope, type: Envelope }]
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+    properties:
+      name:
+        type: "String?"
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+      isReady:
+        type: bool
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+      stageCount:
+        type: int
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+      stageNames:
+        type: "List<String>"
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+
+  # -------------------------------------------------------------------
+  # 5. Envelope
+  # -------------------------------------------------------------------
+  Envelope:
+    type: abstract
+    section: "5. Envelope"
+    dart_name: XybridEnvelope
+    kotlin_name: XybridEnvelope
+    swift_name: XybridEnvelope
+    csharp_name: Envelope
+    factories:
+      text:
+        params:
+          - { name: text, type: String }
+          - { name: voiceId, type: "String?", default: "null" }
+          - { name: speed, type: "double?", default: "null" }
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      audio:
+        params:
+          - { name: audioBytes, type: "List<int>" }
+          - { name: sampleRate, type: int, default: "16000" }
+          - { name: channels, type: int, default: "1" }
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      embedding:
+        params: [{ name: embedding, type: "List<double>" }]
+        status: { dart: implemented, kotlin: implemented, swift: planned, csharp: planned }
+      textWithRole:
+        params:
+          - { name: text, type: String }
+          - { name: role, type: MessageRole }
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+
+  # -------------------------------------------------------------------
+  # 6. VoiceInfo
+  # -------------------------------------------------------------------
+  VoiceInfo:
+    type: data
+    section: "6. VoiceInfo (TTS Voice Metadata)"
+    properties:
+      id:
+        type: String
+        status: { dart: planned, kotlin: implemented, swift: planned, csharp: implemented }
+      name:
+        type: String
+        status: { dart: planned, kotlin: implemented, swift: planned, csharp: implemented }
+      gender:
+        type: "String?"
+        status: { dart: planned, kotlin: implemented, swift: planned, csharp: implemented }
+      language:
+        type: "String?"
+        status: { dart: planned, kotlin: implemented, swift: planned, csharp: implemented }
+      style:
+        type: "String?"
+        status: { dart: planned, kotlin: implemented, swift: planned, csharp: implemented }
+      isDefault:
+        type: bool
+        status: { dart: planned, kotlin: planned, swift: planned, csharp: planned }
+
+  # -------------------------------------------------------------------
+  # 7. Result Types
+  # -------------------------------------------------------------------
+  XybridResult:
+    type: data
+    section: "7. Result Types"
+    dart_name: XybridResult
+    kotlin_name: XybridResult
+    swift_name: XybridResult
+    csharp_name: InferenceResult
+    properties:
+      success:
+        type: bool
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      error:
+        type: "String?"
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      text:
+        type: "String?"
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      audioBytes:
+        type: "Uint8List?"
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      embedding:
+        type: "Float32List?"
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      outputType:
+        type: OutputType
+        status: { dart: planned, kotlin: implemented, swift: implemented, csharp: implemented }
+      latencyMs:
+        type: int
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+      modelId:
+        type: String
+        status: { dart: planned, kotlin: implemented, swift: implemented, csharp: implemented }
+      isFailure:
+        type: bool
+        status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: planned }
+      audioAsWav:
+        type: "Uint8List?"
+        status: { dart: implemented, kotlin: planned, swift: planned, csharp: planned }
+
+  # -------------------------------------------------------------------
+  # 8. Supporting Types
+  # -------------------------------------------------------------------
+  ConversationContext:
+    type: class
+    section: "8. Supporting Types"
+    status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+
+  MessageRole:
+    type: enum
+    section: "8. Supporting Types"
+    values: [system, user, assistant]
+    status: { dart: implemented, kotlin: implemented, swift: implemented, csharp: implemented }
+
+  GenerationConfig:
+    type: data
+    section: "8. Supporting Types"
+    status: { dart: implemented, kotlin: implemented, swift: planned, csharp: implemented }
+
+  StreamToken:
+    type: data
+    section: "8. Supporting Types"
+    status: { dart: implemented, kotlin: planned, swift: planned, csharp: implemented }
+
+  # -------------------------------------------------------------------
+  # 9. Configuration Types
+  # -------------------------------------------------------------------
+  TelemetryConfiguration:
+    type: data
+    section: "9. Configuration Types"
+    status: { dart: stub, kotlin: planned, swift: planned, csharp: planned }
+
+  XybridConfiguration:
+    type: data
+    section: "9. Configuration Types"
+    status: { dart: planned, kotlin: planned, swift: planned, csharp: planned }
