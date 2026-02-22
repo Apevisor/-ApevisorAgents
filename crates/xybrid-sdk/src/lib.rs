@@ -208,6 +208,11 @@ pub use telemetry::{
 /// Re-export OrchestratorEvent for event subscriptions
 pub use xybrid_core::event_bus::OrchestratorEvent;
 
+/// Re-export execution listener types for custom instrumentation
+pub use xybrid_core::execution::listener::{
+    clear_execution_listener, set_execution_listener, ExecutionEvent,
+};
+
 // ============================================================================
 // SDK Configuration
 // ============================================================================

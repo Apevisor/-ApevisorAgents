@@ -31,6 +31,8 @@ use ndarray::ArrayD;
 use std::collections::HashMap;
 use std::path::Path;
 
+use super::listener::ExecutionGuard;
+
 // Internal: ONNX-specific types needed for optimized execution paths
 // These are implementation details, not part of the public API
 use crate::runtime_adapter::onnx::{ONNXSession, OnnxRuntime};
@@ -182,6 +184,21 @@ impl TemplateExecutor {
 
     /// Execute a model based on its metadata.
     pub fn execute(
+        &mut self,
+        metadata: &ModelMetadata,
+        input: &Envelope,
+        config: Option<&GenerationConfig>,
+    ) -> ExecutorResult<Envelope> {
+        let guard = ExecutionGuard::new(&metadata.model_id, "execute");
+        let result = self.execute_impl(metadata, input, config);
+        if let Err(e) = &result {
+            guard.set_failed(e.to_string());
+        }
+        result
+    }
+
+    /// Internal implementation of execute — no telemetry listener events.
+    fn execute_impl(
         &mut self,
         metadata: &ModelMetadata,
         input: &Envelope,
@@ -427,6 +444,22 @@ impl TemplateExecutor {
         context: &ConversationContext,
         config: Option<&GenerationConfig>,
     ) -> ExecutorResult<Envelope> {
+        let guard = ExecutionGuard::new(&metadata.model_id, "execute_with_context");
+        let result = self.execute_with_context_impl(metadata, input, context, config);
+        if let Err(e) = &result {
+            guard.set_failed(e.to_string());
+        }
+        result
+    }
+
+    /// Internal implementation of execute_with_context — no telemetry listener events.
+    fn execute_with_context_impl(
+        &mut self,
+        metadata: &ModelMetadata,
+        input: &Envelope,
+        context: &ConversationContext,
+        config: Option<&GenerationConfig>,
+    ) -> ExecutorResult<Envelope> {
         debug!(
             target: "xybrid_core",
             "TemplateExecutor.execute_with_context START: model_id={}, context_id={}",
@@ -514,7 +547,7 @@ impl TemplateExecutor {
             target: "xybrid_core",
             "Non-LLM model, executing without context transformation"
         );
-        let mut result = self.execute(metadata, input, config)?;
+        let mut result = self.execute_impl(metadata, input, config)?;
 
         // Tag the result as an assistant message
         result = result.with_role(MessageRole::Assistant);
@@ -549,6 +582,22 @@ impl TemplateExecutor {
     /// }))?;
     /// ```
     pub fn execute_streaming(
+        &mut self,
+        metadata: &ModelMetadata,
+        input: &Envelope,
+        on_token: StreamingCallback<'_>,
+        config: Option<&GenerationConfig>,
+    ) -> ExecutorResult<Envelope> {
+        let guard = ExecutionGuard::new(&metadata.model_id, "execute_streaming");
+        let result = self.execute_streaming_impl(metadata, input, on_token, config);
+        if let Err(e) = &result {
+            guard.set_failed(e.to_string());
+        }
+        result
+    }
+
+    /// Internal implementation of execute_streaming — no telemetry listener events.
+    fn execute_streaming_impl(
         &mut self,
         metadata: &ModelMetadata,
         input: &Envelope,
@@ -592,7 +641,7 @@ impl TemplateExecutor {
             );
         }
 
-        self.execute(metadata, input, config)
+        self.execute_impl(metadata, input, config)
     }
 
     /// Execute a model with streaming and conversation context.
@@ -625,8 +674,26 @@ impl TemplateExecutor {
     ///     Ok(())
     /// }))?;
     /// ```
-    #[allow(unused_variables)]
     pub fn execute_streaming_with_context(
+        &mut self,
+        metadata: &ModelMetadata,
+        input: &Envelope,
+        context: &ConversationContext,
+        on_token: StreamingCallback<'_>,
+        config: Option<&GenerationConfig>,
+    ) -> ExecutorResult<Envelope> {
+        let guard = ExecutionGuard::new(&metadata.model_id, "execute_streaming_with_context");
+        let result =
+            self.execute_streaming_with_context_impl(metadata, input, context, on_token, config);
+        if let Err(e) = &result {
+            guard.set_failed(e.to_string());
+        }
+        result
+    }
+
+    /// Internal implementation of execute_streaming_with_context — no telemetry listener events.
+    #[allow(unused_variables)]
+    fn execute_streaming_with_context_impl(
         &mut self,
         metadata: &ModelMetadata,
         input: &Envelope,
@@ -721,7 +788,7 @@ impl TemplateExecutor {
                 target: "xybrid_core",
                 "Non-LLM model, executing streaming without context transformation"
             );
-            let mut result = self.execute_streaming(metadata, input, on_token, config)?;
+            let mut result = self.execute_streaming_impl(metadata, input, on_token, config)?;
             result = result.with_role(MessageRole::Assistant);
 
             Ok(result)
@@ -734,7 +801,7 @@ impl TemplateExecutor {
                 "execute_streaming_with_context: LLM features not enabled, using execute_with_context()"
             );
             // No LLM support - just use regular execution with context
-            self.execute_with_context(metadata, input, context, config)
+            self.execute_with_context_impl(metadata, input, context, config)
         }
     }
 

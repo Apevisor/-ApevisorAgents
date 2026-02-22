@@ -93,6 +93,9 @@ pub(crate) mod postprocessing;
 // Execution modes (SingleShot, Autoregressive, Whisper, TTS, BERT)
 pub(crate) mod modes;
 
+// Execution listener (global hook for observing executor events)
+pub mod listener;
+
 // Execution strategies (modular execution paths, internal)
 pub(crate) mod strategies;
 #[allow(unused_imports)]

@@ -26,6 +26,7 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 use xybrid_core::event_bus::OrchestratorEvent;
+use xybrid_core::execution::listener::{self as execution_listener, ExecutionEvent};
 use xybrid_core::http::{CircuitBreaker, CircuitConfig, RetryPolicy};
 use xybrid_core::tracing as core_tracing;
 
@@ -740,6 +741,10 @@ pub fn init_platform_telemetry(config: TelemetryConfig) {
     // Enable span tracing in xybrid-core for execution profiling
     core_tracing::init_tracing(true);
 
+    // Register automatic execution listener so TemplateExecutor emits
+    // ExecutionStarted / ExecutionCompleted / ExecutionFailed events
+    register_execution_listener();
+
     let exporter = HttpTelemetryExporter::new(config);
     exporter.start();
 
@@ -760,6 +765,9 @@ pub fn init_platform_telemetry_from_env() -> bool {
     if let Some(exporter) = HttpTelemetryExporter::from_env() {
         // Enable span tracing in xybrid-core for execution profiling
         core_tracing::init_tracing(true);
+
+        // Register automatic execution listener
+        register_execution_listener();
 
         exporter.start();
         let sender = exporter.create_sender();
@@ -783,6 +791,58 @@ pub fn set_telemetry_pipeline_context(pipeline_id: Option<Uuid>, trace_id: Optio
     }
 }
 
+/// Register the execution listener that converts `ExecutionEvent`s from
+/// xybrid-core's `TemplateExecutor` into `TelemetryEvent`s and publishes them.
+fn register_execution_listener() {
+    execution_listener::set_execution_listener(|event| {
+        let timestamp_ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+
+        let telemetry_event = match event {
+            ExecutionEvent::Started { model_id, method } => TelemetryEvent {
+                event_type: "ExecutionStarted".to_string(),
+                stage_name: Some(method),
+                target: Some("device".to_string()),
+                latency_ms: None,
+                error: None,
+                data: Some(format!(r#"{{"model":"{}"}}"#, model_id)),
+                timestamp_ms,
+            },
+            ExecutionEvent::Completed {
+                model_id,
+                method,
+                latency_ms,
+            } => TelemetryEvent {
+                event_type: "ExecutionCompleted".to_string(),
+                stage_name: Some(method),
+                target: Some("device".to_string()),
+                latency_ms: Some(latency_ms as u32),
+                error: None,
+                data: Some(format!(r#"{{"model":"{}"}}"#, model_id)),
+                timestamp_ms,
+            },
+            ExecutionEvent::Failed {
+                model_id,
+                method,
+                latency_ms,
+                error,
+            } => TelemetryEvent {
+                event_type: "ExecutionFailed".to_string(),
+                stage_name: Some(method),
+                target: Some("device".to_string()),
+                latency_ms: Some(latency_ms as u32),
+                error: Some(error),
+                data: Some(format!(r#"{{"model":"{}"}}"#, model_id)),
+                timestamp_ms,
+            },
+        };
+
+        publish_telemetry_event(telemetry_event);
+    });
+}
+
 /// Flush all pending telemetry events
 pub fn flush_platform_telemetry() {
     if let Ok(exporter) = PLATFORM_EXPORTER.read() {
@@ -798,6 +858,9 @@ pub fn flush_platform_telemetry() {
 pub fn shutdown_platform_telemetry() {
     // Disable span tracing
     core_tracing::init_tracing(false);
+
+    // Remove automatic execution listener
+    execution_listener::clear_execution_listener();
 
     if let Ok(mut exporter) = PLATFORM_EXPORTER.write() {
         if let Some(exp) = exporter.take() {

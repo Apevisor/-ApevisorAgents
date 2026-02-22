@@ -171,9 +171,11 @@ fn telemetry_e2e_with_mnist_inference() {
         collected.push(ev);
     }
 
+    // With automatic instrumentation we expect at least 4 events:
+    // PipelineStart, ExecutionStarted, ExecutionCompleted, PipelineComplete
     assert!(
-        collected.len() >= 2,
-        "Expected at least 2 events (PipelineStart + PipelineComplete), got {}",
+        collected.len() >= 4,
+        "Expected at least 4 events (PipelineStart + ExecutionStarted + ExecutionCompleted + PipelineComplete), got {}",
         collected.len()
     );
 
@@ -181,6 +183,16 @@ fn telemetry_e2e_with_mnist_inference() {
     assert!(
         types.contains(&"PipelineStart"),
         "Missing PipelineStart event. Got: {:?}",
+        types
+    );
+    assert!(
+        types.contains(&"ExecutionStarted"),
+        "Missing automatic ExecutionStarted event. Got: {:?}",
+        types
+    );
+    assert!(
+        types.contains(&"ExecutionCompleted"),
+        "Missing automatic ExecutionCompleted event. Got: {:?}",
         types
     );
     assert!(
@@ -246,6 +258,129 @@ fn telemetry_event_fields() {
     let deser: TelemetryEvent = serde_json::from_str(&json).unwrap();
     assert_eq!(deser.event_type, ev.event_type);
     assert_eq!(deser.latency_ms, ev.latency_ms);
+}
+
+/// Verify that TemplateExecutor automatically emits ExecutionStarted and
+/// ExecutionCompleted events when platform telemetry is initialized.
+/// This does NOT require env vars — uses a local channel to observe events.
+#[test]
+fn automatic_execution_events() {
+    use xybrid_core::execution::listener;
+
+    let Some(model_dir) = model_fixtures::model_or_skip("mnist") else {
+        return; // model not downloaded — skip gracefully
+    };
+
+    let metadata_path = model_dir.join("model_metadata.json");
+    let metadata: ModelMetadata =
+        serde_json::from_str(&std::fs::read_to_string(&metadata_path).unwrap()).unwrap();
+
+    // Register a local channel to observe events
+    let (tx, rx) = mpsc::channel::<TelemetryEvent>();
+    register_telemetry_sender(tx);
+
+    // Simulate what init_platform_telemetry does for the execution listener
+    // (we don't init the full HTTP exporter since we don't need it)
+    listener::set_execution_listener(|event| {
+        let timestamp_ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+
+        let telemetry_event = match event {
+            xybrid_sdk::ExecutionEvent::Started { model_id, method } => TelemetryEvent {
+                event_type: "ExecutionStarted".to_string(),
+                stage_name: Some(method),
+                target: Some("device".to_string()),
+                latency_ms: None,
+                error: None,
+                data: Some(format!(r#"{{"model":"{}"}}"#, model_id)),
+                timestamp_ms,
+            },
+            xybrid_sdk::ExecutionEvent::Completed {
+                model_id,
+                method,
+                latency_ms,
+            } => TelemetryEvent {
+                event_type: "ExecutionCompleted".to_string(),
+                stage_name: Some(method),
+                target: Some("device".to_string()),
+                latency_ms: Some(latency_ms as u32),
+                error: None,
+                data: Some(format!(r#"{{"model":"{}"}}"#, model_id)),
+                timestamp_ms,
+            },
+            xybrid_sdk::ExecutionEvent::Failed {
+                model_id,
+                method,
+                latency_ms,
+                error,
+            } => TelemetryEvent {
+                event_type: "ExecutionFailed".to_string(),
+                stage_name: Some(method),
+                target: Some("device".to_string()),
+                latency_ms: Some(latency_ms as u32),
+                error: Some(error),
+                data: Some(format!(r#"{{"model":"{}"}}"#, model_id)),
+                timestamp_ms,
+            },
+        };
+
+        publish_telemetry_event(telemetry_event);
+    });
+
+    // Run MNIST inference — should automatically emit events
+    let mut executor = TemplateExecutor::with_base_path(model_dir.to_str().unwrap());
+    let input = mnist_input_envelope();
+    let _output = executor
+        .execute(&metadata, &input, None)
+        .expect("MNIST inference should succeed");
+
+    // Small delay for channel delivery
+    std::thread::sleep(Duration::from_millis(50));
+
+    // Clean up
+    listener::clear_execution_listener();
+
+    // Collect and verify events
+    let mut collected: Vec<TelemetryEvent> = Vec::new();
+    while let Ok(ev) = rx.try_recv() {
+        collected.push(ev);
+    }
+
+    let types: Vec<&str> = collected.iter().map(|e| e.event_type.as_str()).collect();
+
+    assert!(
+        types.contains(&"ExecutionStarted"),
+        "Missing automatic ExecutionStarted event. Got: {:?}",
+        types
+    );
+    assert!(
+        types.contains(&"ExecutionCompleted"),
+        "Missing automatic ExecutionCompleted event. Got: {:?}",
+        types
+    );
+
+    // Verify ExecutionStarted has correct model_id
+    let started = collected
+        .iter()
+        .find(|e| e.event_type == "ExecutionStarted")
+        .unwrap();
+    assert_eq!(started.stage_name.as_deref(), Some("execute"));
+    assert!(started.data.as_ref().unwrap().contains("mnist"));
+
+    // Verify ExecutionCompleted has latency
+    let completed = collected
+        .iter()
+        .find(|e| e.event_type == "ExecutionCompleted")
+        .unwrap();
+    assert!(completed.latency_ms.is_some());
+    assert!(completed.latency_ms.unwrap() > 0);
+
+    println!(
+        "OK — {} automatic execution events captured",
+        collected.len()
+    );
 }
 
 /// Smoke test: MNIST inference works without telemetry (no env vars needed).
