@@ -28,7 +28,7 @@ export function baseOptions(locale: string): BaseLayoutProps {
           />
         ),
         text: 'Community',
-        url: 'https://discord.gg/cgd3tbFPWx',
+        url: 'https://discord.gg/YhFHHkhbad',
         external: true,
         secondary: false,
       },

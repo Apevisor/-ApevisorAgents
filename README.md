@@ -21,14 +21,14 @@
   <a href="https://github.com/xybrid-ai/xybrid/stargazers"><img src="https://img.shields.io/github/stars/xybrid-ai/xybrid?style=flat-square" alt="Stars"></a>
   <a href="https://pub.dev/packages/xybrid_flutter"><img src="https://img.shields.io/pub/v/xybrid_flutter?style=flat-square&label=pub.dev" alt="pub.dev"></a>
   <a href="https://central.sonatype.com/artifact/ai.xybrid/xybrid-kotlin"><img src="https://img.shields.io/maven-central/v/ai.xybrid/xybrid-kotlin?style=flat-square&label=Maven%20Central" alt="Maven Central"></a>
-  <a href="https://discord.gg/cgd3tbFPWx"><img src="https://img.shields.io/discord/1451959487811420282?label=Discord&style=flat-square&color=5865F2" alt="Discord"></a>
+  <a href="https://discord.gg/YhFHHkhbad"><img src="https://img.shields.io/discord/1451959487811420282?label=Discord&style=flat-square&color=5865F2" alt="Discord"></a>
 </p>
 
 <p align="center">
   <a href="https://docs.xybrid.dev">Documentation</a> ·
   <a href="#sdks">SDKs</a> ·
   <a href="https://www.xybrid.ai/models">Models</a> ·
-  <a href="https://discord.gg/cgd3tbFPWx">Join Discord</a> ·
+  <a href="https://discord.gg/YhFHHkhbad">Join Discord</a> ·
   <a href="https://github.com/xybrid-ai/xybrid/issues">Issues</a>
 </p>
 
@@ -247,7 +247,7 @@ All models run entirely on-device. No cloud, no API keys required. Browse the fu
 ## Community
 
 - [Documentation](https://docs.xybrid.dev)
-- [Discord](https://discord.gg/cgd3tbFPWx)
+- [Discord](https://discord.gg/YhFHHkhbad)
 - [GitHub Issues](https://github.com/xybrid-ai/xybrid/issues)
 
 ## Contributing
