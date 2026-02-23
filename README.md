@@ -34,6 +34,10 @@
 
 ---
 
+<p align="center">
+  <img src="docs/demo-desktop.gif" alt="Desktop demo" width="700">
+</p>
+
 ## SDKs
 
 Xybrid is a **Rust-powered runtime** with native bindings for every major platform. Pick your SDK:

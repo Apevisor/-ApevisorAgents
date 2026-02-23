@@ -2,6 +2,7 @@
   <a href="./README.md">English</a> · <a href="./README.zh-CN.md">简体中文</a>
 </p>
 
+
 <p align="center">
   <img src="./docs/logo.jpg" alt="Xybrid Logo" width="180"/>
 </p>
@@ -26,12 +27,16 @@
 <p align="center">
   <a href="https://docs.xybrid.dev">文档</a> ·
   <a href="#sdk">SDK</a> ·
-  <a href="#支持的模型">模型</a> ·
+  <a href="https://www.xybrid.ai/models">模型</a> ·
   <a href="https://discord.gg/YhFHHkhbad">加入 Discord</a> ·
   <a href="https://github.com/xybrid-ai/xybrid/issues">问题反馈</a>
 </p>
 
 ---
+
+<p align="center">
+  <img src="docs/demo-desktop.gif" alt="Desktop demo" width="700">
+</p>
 
 ## SDK
 
@@ -121,60 +126,16 @@ let result = model.run(&Envelope::text("国破山河在，城春草木深"))?;
 // result → 24kHz WAV 音频
 ```
 
-### 语言模型
-
-在设备端运行 LLM——无需云端 API：
-
-**CLI:**
-```sh
-xybrid run qwen2.5-0.5b --input "请以杜甫的风格写一首关于月亮的五言律诗"
-```
-
-**Flutter:**
-```dart
-final model = await Xybrid.model(modelId: 'qwen2.5-0.5b').load();
-final result = await model.run(envelope: Envelope.text(text: '请以杜甫的风格写一首关于月亮的五言律诗'));
-// result → "孤月悬天际，清辉洒万家..."
-```
-
-**Kotlin:**
-```kotlin
-val model = Xybrid.model(modelId = "qwen2.5-0.5b").load()
-val result = model.run(envelope = XybridEnvelope.Text("请以杜甫的风格写一首关于月亮的五言律诗"))
-// result → "孤月悬天际，清辉洒万家..."
-```
-
-**Swift:**
-```swift
-let model = try Xybrid.model(modelId: "qwen2.5-0.5b").load()
-let result = try model.run(envelope: .text("请以杜甫的风格写一首关于月亮的五言律诗"))
-// result → "孤月悬天际，清辉洒万家..."
-```
-
-**Unity (C#):**
-```csharp
-var model = Xybrid.Model(modelId: "qwen2.5-0.5b").Load();
-var result = model.Run(envelope: Envelope.Text("请以杜甫的风格写一首关于月亮的五言律诗"));
-// result → "孤月悬天际，清辉洒万家..."
-```
-
-**Rust:**
-```rust
-let model = Xybrid::model("qwen2.5-0.5b").load()?;
-let result = model.run(&Envelope::text("请以杜甫的风格写一首关于月亮的五言律诗"))?;
-// result → "孤月悬天际，清辉洒万家..."
-```
-
 ### 管道
 
-将模型链接在一起——用 3 行 YAML 构建语音诗人：
+将模型链接在一起——用 3 行 YAML 构建语音助手：
 
 ```yaml
-# voice-poet.yaml
-name: voice-poet
+# voice-assistant.yaml
+name: voice-assistant
 stages:
   - model: whisper-tiny    # 语音 → 文本
-  - model: qwen2.5-0.5b    # 以杜甫风格写诗
+  - model: qwen2.5-0.5b    # 用 LLM 处理
   - model: kokoro-82m      # 文本 → 语音
 ```
 
