@@ -35,7 +35,8 @@
 ---
 
 <p align="center">
-  <img src="docs/demo-desktop.gif" alt="Desktop demo" width="700">
+  <img src="docs/demo-desktop.gif" alt="Desktop demo" width="540">&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/demo-android.gif" alt="Android demo" width="150">
 </p>
 
 ## SDK
