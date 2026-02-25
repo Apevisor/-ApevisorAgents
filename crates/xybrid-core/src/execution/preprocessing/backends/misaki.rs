@@ -239,11 +239,19 @@ fn grow_dictionary(
 /// - `-s` / `-es` / `-ies`: plural/third person (e.g., "parameters" → "parameter" + "z")
 /// - `-ed`: past tense (e.g., "deployed" → "deploy" + "d")
 /// - `-ing`: progressive (e.g., "delivering" → "deliver" + "ɪŋ")
+/// - `-ly`: adverb (e.g., "significantly" → "significant" + "liː")
+/// - `-ment`: noun (e.g., "deployment" → "deploy" + "mənt")
+/// - `-ness`: noun (e.g., "darkness" → "dark" + "nəs")
+/// - `-ful`: adjective (e.g., "powerful" → "power" + "fəl")
+/// - `-less`: adjective (e.g., "weightless" → "weight" + "ləs")
+/// - `-er`/`-est`: comparative/superlative
+/// - `-able`/`-ible`: adjective
 fn stem_and_lookup(
     word: &str,
     gold: &HashMap<String, serde_json::Value>,
     silver: &HashMap<String, serde_json::Value>,
 ) -> Option<String> {
+    // Try inflectional suffixes first (most common)
     if let Some(ps) = stem_s(word, gold, silver) {
         return Some(ps);
     }
@@ -253,6 +261,67 @@ fn stem_and_lookup(
     if let Some(ps) = stem_ing(word, gold, silver) {
         return Some(ps);
     }
+    // Try derivational suffixes
+    if let Some(ps) = stem_suffix(word, gold, silver, "ly", "liː") {
+        return Some(ps);
+    }
+    if let Some(ps) = stem_suffix(word, gold, silver, "ment", "mənt") {
+        return Some(ps);
+    }
+    if let Some(ps) = stem_suffix(word, gold, silver, "ness", "nəs") {
+        return Some(ps);
+    }
+    if let Some(ps) = stem_suffix(word, gold, silver, "ful", "fəl") {
+        return Some(ps);
+    }
+    if let Some(ps) = stem_suffix(word, gold, silver, "less", "ləs") {
+        return Some(ps);
+    }
+    if let Some(ps) = stem_suffix(word, gold, silver, "able", "əbəl") {
+        return Some(ps);
+    }
+    if let Some(ps) = stem_suffix(word, gold, silver, "ible", "əbəl") {
+        return Some(ps);
+    }
+    if let Some(ps) = stem_suffix(word, gold, silver, "er", "ɚ") {
+        return Some(ps);
+    }
+    if let Some(ps) = stem_suffix(word, gold, silver, "est", "ɪst") {
+        return Some(ps);
+    }
+    None
+}
+
+/// Generic suffix stemming: strip `suffix`, look up the stem, and append `phoneme_suffix`.
+///
+/// Also tries adding back silent-e (e.g., "completely" → "complet" not found → "complete" found).
+fn stem_suffix(
+    word: &str,
+    gold: &HashMap<String, serde_json::Value>,
+    silver: &HashMap<String, serde_json::Value>,
+    suffix: &str,
+    phoneme_suffix: &str,
+) -> Option<String> {
+    if word.len() <= suffix.len() + 2 || !word.ends_with(suffix) {
+        return None;
+    }
+
+    let stem = &word[..word.len() - suffix.len()];
+
+    // Try direct stem lookup
+    if let Some(ps) = lookup_word_phonemes(stem, gold).or_else(|| lookup_word_phonemes(stem, silver))
+    {
+        return Some(format!("{}{}", ps, phoneme_suffix));
+    }
+
+    // Try stem + silent-e (e.g., "complet" → "complete")
+    let with_e = format!("{}e", stem);
+    if let Some(ps) =
+        lookup_word_phonemes(&with_e, gold).or_else(|| lookup_word_phonemes(&with_e, silver))
+    {
+        return Some(format!("{}{}", ps, phoneme_suffix));
+    }
+
     None
 }
 
@@ -494,17 +563,44 @@ fn spell_as_letters(word: &str) -> String {
     parts.join(" ")
 }
 
+/// Check if a word ends with a silent-e pattern (VCe where V=vowel, C=consonant, e=silent).
+///
+/// Returns true for words like "make", "like", "note", "use", "home" where the
+/// final 'e' is silent and the preceding vowel is "long".
+fn has_silent_e(chars: &[char]) -> bool {
+    let n = chars.len();
+    if n < 4 {
+        return false;
+    }
+    let last = chars[n - 1];
+    if last != 'e' {
+        return false;
+    }
+    let second_last = chars[n - 2];
+    let third_last = chars[n - 3];
+    // Pattern: vowel + consonant + e (silent)
+    let is_consonant = |c: char| c.is_ascii_lowercase() && !"aeiou".contains(c);
+    is_consonant(second_last) && "aeiou".contains(third_last)
+}
+
 /// Rule-based grapheme-to-phoneme conversion for out-of-vocabulary English words.
 ///
 /// Uses a greedy left-to-right matching approach with multi-character grapheme rules.
+/// Handles silent-e pattern for "long" vowel sounds.
 fn rule_based_g2p(word: &str) -> String {
     let chars: Vec<char> = word.chars().collect();
     let n = chars.len();
+    let silent_e = has_silent_e(&chars);
     let mut result = String::new();
     let mut i = 0;
 
     while i < n {
         let remaining = n - i;
+
+        // Skip silent-e at end of word
+        if silent_e && i == n - 1 && chars[i] == 'e' {
+            break;
+        }
 
         // Try 4-char patterns
         if remaining >= 4 {
@@ -542,6 +638,15 @@ fn rule_based_g2p(word: &str) -> String {
                 }
                 ('d', 'g', 'e') => {
                     result.push('ʤ');
+                    true
+                }
+                ('o', 'u', 's') if i + 3 == n => {
+                    // Word-final "-ous" (e.g., "famous")
+                    result.push_str("əs");
+                    true
+                }
+                ('a', 'l', 'l') => {
+                    result.push_str("ɔːl");
                     true
                 }
                 _ => false,
@@ -704,12 +809,47 @@ fn rule_based_g2p(word: &str) -> String {
         let c = chars[i];
         let next_ch = chars.get(i + 1);
 
+        // Check if this vowel is in the "long" position (VCe pattern)
+        let is_long_vowel = silent_e
+            && "aeiou".contains(c)
+            && i + 2 == n - 1; // vowel is 3rd-from-end in VCe
+
         match c {
-            'a' => result.push('æ'),
-            'e' => result.push('ɛ'),
-            'i' => result.push('ɪ'),
-            'o' => result.push('ɑ'),
-            'u' => result.push('ʌ'),
+            'a' => {
+                if is_long_vowel {
+                    result.push_str("eɪ");
+                } else {
+                    result.push('æ');
+                }
+            }
+            'e' => {
+                if is_long_vowel {
+                    result.push_str("iː");
+                } else {
+                    result.push('ɛ');
+                }
+            }
+            'i' => {
+                if is_long_vowel {
+                    result.push_str("aɪ");
+                } else {
+                    result.push('ɪ');
+                }
+            }
+            'o' => {
+                if is_long_vowel {
+                    result.push_str("oʊ");
+                } else {
+                    result.push('ɑ');
+                }
+            }
+            'u' => {
+                if is_long_vowel {
+                    result.push_str("juː");
+                } else {
+                    result.push('ʌ');
+                }
+            }
             'y' => {
                 if i == 0 {
                     result.push('j');
