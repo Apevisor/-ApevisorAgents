@@ -16,21 +16,49 @@
 </p>
 
 <p align="center">
-  <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square" alt="许可证"></a>
-  <a href="https://github.com/xybrid-ai/xybrid/actions"><img src="https://img.shields.io/github/actions/workflow/status/xybrid-ai/xybrid/ci.yml?branch=master&style=flat-square" alt="构建状态"></a>
-  <a href="https://github.com/xybrid-ai/xybrid/stargazers"><img src="https://img.shields.io/github/stars/xybrid-ai/xybrid?style=flat-square" alt="Stars"></a>
-  <a href="https://pub.dev/packages/xybrid_flutter"><img src="https://img.shields.io/pub/v/xybrid_flutter?style=flat-square&label=pub.dev" alt="pub.dev"></a>
-  <a href="https://central.sonatype.com/artifact/ai.xybrid/xybrid-kotlin"><img src="https://img.shields.io/maven-central/v/ai.xybrid/xybrid-kotlin?style=flat-square&label=Maven%20Central" alt="Maven Central"></a>
-  <a href="https://discord.gg/YhFHHkhbad"><img src="https://img.shields.io/discord/1451959487811420282?label=Discord&style=flat-square&color=5865F2" alt="Discord"></a>
-</p>
-
-<p align="center">
   <a href="https://docs.xybrid.dev">文档</a> ·
   <a href="#sdk">SDK</a> ·
   <a href="https://www.xybrid.ai/models">模型</a> ·
   <a href="https://discord.gg/YhFHHkhbad">加入 Discord</a> ·
   <a href="https://github.com/xybrid-ai/xybrid/issues">问题反馈</a>
 </p>
+
+<p align="center">
+
+[![Website][website-shield]][website-url]
+[![Discord][discord-shield]][discord-url]
+[![Twitter][twitter-shield]][twitter-url]
+<br>
+[![License][license-shield]][license-url]
+[![Build][build-shield]][build-url]
+[![Stars][stars-shield]][stars-url]
+[![Release][release-shield]][release-url]
+[![Release Date][release-date-shield]][release-url]
+<br>
+[![pub.dev][pubdev-shield]][pubdev-url]
+[![Maven Central][maven-shield]][maven-url]
+
+</p>
+
+[website-shield]: https://img.shields.io/badge/xybrid.ai-4285F4?style=flat
+[website-url]: https://www.xybrid.ai/
+[discord-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdiscord.com%2Fapi%2Finvites%2FYhFHHkhbad%3Fwith_counts%3Dtrue&query=%24.approximate_member_count&logo=discord&logoColor=white&label=Discord&color=5865F2&suffix=%20members
+[discord-url]: https://discord.gg/YhFHHkhbad
+[twitter-shield]: https://img.shields.io/twitter/follow/xybrid_ai
+[twitter-url]: https://x.com/xybrid_ai
+[license-shield]: https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat
+[license-url]: https://opensource.org/licenses/Apache-2.0
+[build-shield]: https://img.shields.io/github/actions/workflow/status/xybrid-ai/xybrid/ci.yml?branch=master&style=flat
+[build-url]: https://github.com/xybrid-ai/xybrid/actions
+[stars-shield]: https://img.shields.io/github/stars/xybrid-ai/xybrid?style=flat
+[stars-url]: https://github.com/xybrid-ai/xybrid/stargazers
+[release-shield]: https://img.shields.io/github/v/release/xybrid-ai/xybrid?style=flat&sort=semver
+[release-url]: https://github.com/xybrid-ai/xybrid/releases
+[release-date-shield]: https://img.shields.io/github/release-date/xybrid-ai/xybrid?style=flat
+[pubdev-shield]: https://img.shields.io/pub/v/xybrid_flutter?style=flat&label=pub.dev
+[pubdev-url]: https://pub.dev/packages/xybrid_flutter
+[maven-shield]: https://img.shields.io/maven-central/v/ai.xybrid/xybrid-kotlin?style=flat&label=Maven%20Central
+[maven-url]: https://central.sonatype.com/artifact/ai.xybrid/xybrid-kotlin
 
 ---
 
