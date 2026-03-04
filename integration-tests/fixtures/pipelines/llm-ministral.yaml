@@ -1,0 +1,8 @@
+name: ministral-3-3b-chat
+description: Ministral 3 3B chat pipeline
+
+stages:
+  - name: llm
+    model_id: ministral-3-3b
+    model_path: repos/xybrid/integration-tests/fixtures/models/ministral-3-3b
+    target: device

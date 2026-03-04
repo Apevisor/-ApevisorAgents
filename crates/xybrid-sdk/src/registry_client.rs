@@ -35,7 +35,7 @@
 use crate::cache::CacheManager;
 use crate::model::SdkError;
 use crate::source::detect_platform;
-use log::{debug, info};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -563,6 +563,10 @@ impl RegistryClient {
     ///
     /// Extraction is idempotent: if the bundle was already extracted, returns immediately.
     ///
+    /// For **passthrough variants** (e.g., GGUF models hosted on external HuggingFace repos),
+    /// the model file is downloaded directly and `model_metadata.json` is written from the
+    /// registry response, skipping the .xyb bundle flow entirely.
+    ///
     /// # Arguments
     ///
     /// * `mask` - Model mask (e.g., "kokoro-82m")
@@ -593,11 +597,114 @@ impl RegistryClient {
     where
         F: Fn(f32),
     {
-        // First, ensure the bundle is downloaded
-        let xyb_path = self.fetch(mask, platform, progress_callback)?;
+        // Resolve first to check if passthrough
+        let resolved = self.resolve(mask, platform)?;
 
-        // Then ensure it's extracted (idempotent - returns immediately if already done)
-        self.cache.ensure_extracted(&xyb_path)
+        if resolved.passthrough {
+            // Passthrough: download raw model file directly, write metadata from registry
+            self.fetch_passthrough(mask, &resolved, progress_callback)
+        } else {
+            // Standard flow: download .xyb bundle, then extract
+            let xyb_path = self.fetch(mask, platform, progress_callback)?;
+            self.cache.ensure_extracted(&xyb_path)
+        }
+    }
+
+    /// Fetch a passthrough model: download raw file directly and write metadata from registry.
+    ///
+    /// For passthrough variants, there is no .xyb bundle. The model file (e.g., a GGUF)
+    /// is downloaded directly from the source HuggingFace repo, and `model_metadata.json`
+    /// is written from the inline metadata in the registry response.
+    fn fetch_passthrough<F>(
+        &self,
+        mask: &str,
+        resolved: &ResolvedVariant,
+        progress_callback: F,
+    ) -> Result<PathBuf, SdkError>
+    where
+        F: Fn(f32),
+    {
+        let extract_dir = self.cache.extraction_dir(mask);
+        let model_file_path = extract_dir.join(&resolved.file);
+        let metadata_path = extract_dir.join("model_metadata.json");
+
+        // Idempotency check: if model file + metadata exist, check cache validity
+        if model_file_path.exists() && metadata_path.exists() {
+            if resolved.sha256.is_empty() {
+                // No hash to verify — trust existing files
+                warn!(
+                    "Passthrough cache hit for '{}' (no hash verification) at {}",
+                    mask,
+                    extract_dir.display()
+                );
+                return Ok(extract_dir);
+            }
+            if let Some(cached_hash) = read_cached_hash(&model_file_path) {
+                if cached_hash == resolved.sha256 {
+                    info!(
+                        "Passthrough cache hit for '{}' at {}",
+                        mask,
+                        extract_dir.display()
+                    );
+                    return Ok(extract_dir);
+                }
+                info!("Passthrough hash mismatch for '{}', re-downloading", mask);
+            }
+        }
+
+        // Create extraction directory
+        std::fs::create_dir_all(&extract_dir).map_err(|e| {
+            SdkError::CacheError(format!("Failed to create extraction directory: {}", e))
+        })?;
+
+        // Download raw model file directly to extraction dir
+        info!(
+            "Passthrough download '{}' from {}",
+            mask, resolved.download_url
+        );
+        self.download_with_progress(
+            &resolved.download_url,
+            &model_file_path,
+            resolved.size_bytes,
+            &progress_callback,
+        )?;
+
+        // Verify SHA256
+        if !resolved.sha256.is_empty() {
+            let hash = compute_sha256(&model_file_path)?;
+            if hash != resolved.sha256 {
+                std::fs::remove_file(&model_file_path).ok();
+                return Err(SdkError::CacheError(format!(
+                    "Passthrough SHA256 mismatch: expected {}, got {}",
+                    resolved.sha256, hash
+                )));
+            }
+            // Cache the verified hash
+            write_cached_hash(&model_file_path, &hash);
+            info!("Passthrough SHA256 verified for '{}'", mask);
+        }
+
+        // Write model_metadata.json from registry response
+        if let Some(ref metadata) = resolved.model_metadata {
+            let metadata_json = serde_json::to_string_pretty(metadata).map_err(|e| {
+                SdkError::CacheError(format!("Failed to serialize model metadata: {}", e))
+            })?;
+            std::fs::write(&metadata_path, metadata_json).map_err(|e| {
+                SdkError::CacheError(format!("Failed to write model_metadata.json: {}", e))
+            })?;
+            info!(
+                "Wrote model_metadata.json for passthrough model '{}' at {}",
+                mask,
+                metadata_path.display()
+            );
+        } else {
+            return Err(SdkError::CacheError(format!(
+                "Passthrough variant for '{}' has no model_metadata in registry response",
+                mask
+            )));
+        }
+
+        Ok(extract_dir)
     }
 
     /// Check if a model is already extracted and ready to use.
@@ -779,8 +886,13 @@ fn compute_sha256(path: &PathBuf) -> Result<String, SdkError> {
 }
 
 /// Get the path to the cached hash sidecar file.
-fn hash_cache_path(bundle_path: &PathBuf) -> PathBuf {
-    bundle_path.with_extension("xyb.sha256")
+///
+/// For a file like `model.xyb`, returns `model.xyb.sha256`.
+/// For a file like `model.gguf`, returns `model.gguf.sha256`.
+fn hash_cache_path(file_path: &PathBuf) -> PathBuf {
+    let mut sidecar = file_path.as_os_str().to_os_string();
+    sidecar.push(".sha256");
+    PathBuf::from(sidecar)
 }
 
 /// Read cached hash from sidecar file if it exists and is still valid.
@@ -921,7 +1033,7 @@ struct ResolveResponse {
 pub struct ResolvedVariant {
     /// HuggingFace repository
     pub hf_repo: String,
-    /// Bundle filename
+    /// Bundle filename (or raw model filename for passthrough)
     pub file: String,
     /// Direct download URL
     pub download_url: String,
@@ -933,6 +1045,12 @@ pub struct ResolvedVariant {
     pub size_bytes: u64,
     /// SHA256 hash for verification
     pub sha256: String,
+    /// Whether this is a passthrough variant (direct download, no .xyb bundle)
+    #[serde(default)]
+    pub passthrough: bool,
+    /// Inline model_metadata.json for passthrough variants
+    #[serde(default)]
+    pub model_metadata: Option<serde_json::Value>,
 }
 
 /// Cache statistics.
@@ -998,6 +1116,8 @@ mod tests {
             quantization: "fp16".to_string(),
             size_bytes: 100000,
             sha256: "abc123".to_string(),
+            passthrough: false,
+            model_metadata: None,
         };
         let path = client.get_cache_path(&resolved);
         assert!(path.to_string_lossy().contains("kokoro-82m"));
