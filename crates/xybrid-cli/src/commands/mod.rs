@@ -4,25 +4,29 @@
 //!
 //! | Module | Commands |
 //! |--------|----------|
-//! | [`run`] | `run` - Execute pipelines |
-//! | [`models`] | `models list`, `models info`, etc. |
-//! | [`cache`] | `cache status`, `cache clear`, etc. |
-//! | [`trace`] | `trace` - Session analysis |
-//!
-//! ## Future Refactoring
-//!
-//! The remaining commands can be extracted as needed:
-//! - `prepare` - Pipeline validation
-//! - `plan` - Execution planning
-//! - `fetch` - Model downloading
-//! - `pack` - Bundle creation
-//! - `deploy` - Bundle deployment
+//! | [`run`] | `run` - Execute pipelines, bundles, and models |
+//! | [`repl`] | `repl` - Interactive REPL mode |
+//! | [`models`] | `models list`, `models info`, `models voices` |
+//! | [`cache`] | `cache list`, `cache status`, `cache clear` |
+//! | [`fetch`] | `fetch` - Model downloading |
+//! | [`bundle`] | `bundle` - Create .xyb bundles from registry |
+//! | [`pack`] | `pack` - Package local model artifacts |
+//! | [`pipeline`] | `prepare`, `plan` - Pipeline validation and planning |
+//! | [`trace`] | `trace` - Session telemetry analysis |
+//! | [`types`] | Shared CLI enum types (ModelsCommand, CacheCommand) |
+//! | [`utils`] | Shared utility functions |
 
-// Currently commands are still in main.rs
-// This module structure is prepared for incremental migration
-
-#[allow(dead_code)]
+pub mod bundle;
+pub mod cache;
+pub mod fetch;
+pub mod models;
+pub mod pack;
+pub mod pipeline;
+pub mod repl;
+pub mod run;
+pub mod trace;
+pub mod types;
 pub mod utils;
 
-// Re-export utility functions for use in main.rs
-pub use utils::*;
+// Re-export shared types
+pub(crate) use types::{CacheCommand, ModelsCommand};

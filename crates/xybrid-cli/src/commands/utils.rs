@@ -2,17 +2,6 @@
 
 use std::path::Path;
 
-/// Truncate a string to a maximum length, adding "..." if truncated.
-pub fn truncate(s: &str, max_len: usize) -> String {
-    if s.len() <= max_len {
-        s.to_string()
-    } else if max_len > 3 {
-        format!("{}...", &s[..max_len - 3])
-    } else {
-        s[..max_len].to_string()
-    }
-}
-
 /// Format model parameter count (e.g., "82M", "1.5B").
 pub fn format_params(params: u64) -> String {
     if params >= 1_000_000_000 {
@@ -54,46 +43,6 @@ pub fn dir_size_bytes(path: &Path) -> anyhow::Result<u64> {
         }
     }
     Ok(total)
-}
-
-/// Format a Unix timestamp in milliseconds to a human-readable string.
-pub fn format_timestamp(ts_ms: u64) -> String {
-    use std::time::{Duration, UNIX_EPOCH};
-
-    let duration = Duration::from_millis(ts_ms);
-    let datetime = UNIX_EPOCH + duration;
-
-    format_system_time(datetime)
-}
-
-/// Format a SystemTime to a human-readable string.
-pub fn format_system_time(time: std::time::SystemTime) -> String {
-    use std::time::UNIX_EPOCH;
-
-    let duration = time.duration_since(UNIX_EPOCH).unwrap_or_default();
-    let secs = duration.as_secs();
-
-    // Convert to local time components (simplified, no timezone handling)
-    let days = secs / 86400;
-    let remaining = secs % 86400;
-    let hours = remaining / 3600;
-    let mins = (remaining % 3600) / 60;
-    let secs_part = remaining % 60;
-
-    // Very rough date calculation (ignores leap years, months, etc.)
-    let year = 1970 + days / 365;
-    let month = ((days % 365) / 30) + 1;
-    let day = ((days % 365) % 30) + 1;
-
-    format!(
-        "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
-        year,
-        month.min(12),
-        day.min(31),
-        hours,
-        mins,
-        secs_part
-    )
 }
 
 /// Display a stage name, stripping any "@target" suffix.
