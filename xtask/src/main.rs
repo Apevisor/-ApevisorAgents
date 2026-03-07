@@ -357,6 +357,25 @@ enum Commands {
         version: Option<String>,
     },
 
+    /// Build xybrid-ffi for Unity target platforms
+    ///
+    /// Convenience wrapper around build-ffi that orchestrates builds for all Unity-supported
+    /// platforms. By default, builds for the host platform only. Use --all-platforms to build
+    /// all targets available on the current host OS.
+    BuildUnity {
+        /// Build all Unity target platforms available on the current host OS
+        #[arg(long)]
+        all_platforms: bool,
+
+        /// Generate C# bindings (NativeMethods.g.cs) via csbindgen
+        #[arg(long)]
+        csharp: bool,
+
+        /// Copy built libraries to bindings/unity/Runtime/Plugins/<Platform>/
+        #[arg(long)]
+        deploy: bool,
+    },
+
     /// Package build artifacts for distribution (creates dist/ with .zip files and checksums)
     Package {
         /// Override the version (defaults to Cargo.toml version or git tag)
@@ -557,6 +576,13 @@ fn main() -> Result<()> {
             let ver = get_version(version.as_deref());
             build_all(is_release, parallel, &ver)?;
         }
+        Commands::BuildUnity {
+            all_platforms,
+            csharp,
+            deploy,
+        } => {
+            build_unity(all_platforms, csharp, deploy)?;
+        }
         Commands::Package {
             version,
             output_dir,
@@ -676,51 +702,63 @@ fn build_ffi(
     );
     println!("  Features: {}", features_str);
 
-    let mut cmd = Command::new("cargo");
-    cmd.arg("build").arg("-p").arg("xybrid-ffi");
+    // Android targets use cargo-ndk (same as Kotlin/Flutter CI) which handles
+    // all NDK toolchain setup (CC, CXX, linker, cmake, PATH).
+    let is_android = target.as_deref().is_some_and(|t| t.contains("android"));
 
-    // Pass all features
-    cmd.arg("--features").arg(&features_str);
+    if is_android {
+        build_ffi_android(target.as_deref().unwrap(), release, &features_str)?;
+    } else {
+        let mut cmd = Command::new("cargo");
+        cmd.arg("build").arg("-p").arg("xybrid-ffi");
+        cmd.arg("--features").arg(&features_str);
 
-    if release {
-        cmd.arg("--release");
-    }
+        if release {
+            cmd.arg("--release");
+        }
 
-    if let Some(ref t) = target {
-        cmd.arg("--target").arg(t);
+        if let Some(ref t) = target {
+            cmd.arg("--target").arg(t);
 
-        // For iOS targets, resolve and set ORT_LIB_LOCATION + fp16 rustflags
-        if is_ios_target(t) {
-            if let Some(ort_path) = resolve_ort_lib_location(t) {
-                cmd.env("ORT_LIB_LOCATION", &ort_path);
-            } else {
-                anyhow::bail!(
-                    "ORT iOS library not found. To build for iOS, either:\n\
-                     1. Place the ORT iOS xcframework at vendor/ort-ios/onnxruntime.xcframework/\n\
-                     2. Set ORT_LIB_LOCATION env var to a directory containing libonnxruntime.a\n\n\
-                     Download from: https://huggingface.co/csukuangfj/ios-onnxruntime"
-                );
+            // For iOS targets, resolve and set ORT_LIB_LOCATION + fp16 rustflags
+            if is_ios_target(t) {
+                if let Some(ort_path) = resolve_ort_lib_location(t) {
+                    cmd.env("ORT_LIB_LOCATION", &ort_path);
+                } else {
+                    anyhow::bail!(
+                        "ORT iOS library not found. To build for iOS, either:\n\
+                         1. Place the ORT iOS xcframework at vendor/ort-ios/onnxruntime.xcframework/\n\
+                         2. Set ORT_LIB_LOCATION env var to a directory containing libonnxruntime.a\n\n\
+                         Download from: https://huggingface.co/csukuangfj/ios-onnxruntime"
+                    );
+                }
+                set_ios_rustflags(&mut cmd, t);
             }
-            set_ios_rustflags(&mut cmd, t);
+        }
+
+        let status = cmd.status().context("Failed to run cargo build")?;
+
+        if !status.success() {
+            anyhow::bail!("cargo build failed");
         }
     }
 
-    let status = cmd.status().context("Failed to run cargo build")?;
-
-    if !status.success() {
-        anyhow::bail!("cargo build failed");
-    }
-
-    // Print output location
+    // Print output location — use the target triple (not host OS) to determine lib extension
     let profile = if release { "release" } else { "debug" };
-    let dylib_name = if cfg!(target_os = "macos") {
-        "libxybrid_ffi.dylib"
-    } else if cfg!(target_os = "windows") {
-        "xybrid_ffi.dll"
-    } else {
-        "libxybrid_ffi.so"
-    };
-    let staticlib_name = if cfg!(target_os = "windows") {
+    let target_str = target.as_deref().unwrap_or("");
+    let dylib_name =
+        if target_str.contains("apple") || (target_str.is_empty() && cfg!(target_os = "macos")) {
+            "libxybrid_ffi.dylib"
+        } else if target_str.contains("windows")
+            || (target_str.is_empty() && cfg!(target_os = "windows"))
+        {
+            "xybrid_ffi.dll"
+        } else {
+            "libxybrid_ffi.so"
+        };
+    let staticlib_name = if target_str.contains("windows")
+        || (target_str.is_empty() && cfg!(target_os = "windows"))
+    {
         "xybrid_ffi.lib"
     } else {
         "libxybrid_ffi.a"
@@ -755,6 +793,103 @@ fn build_ffi(
     Ok(())
 }
 
+/// All Unity target platforms with their Rust target triples.
+const UNITY_TARGETS: &[(&str, &str)] = &[
+    // Note: x86_64-apple-darwin omitted — ORT has no prebuilt binaries for Intel Mac.
+    // Intel Macs can run arm64 binaries via Rosetta 2.
+    ("macOS arm64", "aarch64-apple-darwin"),
+    ("Windows x86_64", "x86_64-pc-windows-msvc"),
+    ("Linux x86_64", "x86_64-unknown-linux-gnu"),
+    ("iOS arm64", "aarch64-apple-ios"),
+    ("Android arm64", "aarch64-linux-android"),
+    ("Android armv7", "armv7-linux-androideabi"),
+    ("Android x86_64", "x86_64-linux-android"),
+];
+
+/// Returns the Unity targets that can be built on the current host OS.
+fn unity_targets_for_host() -> Vec<&'static str> {
+    let host = std::env::consts::OS;
+    UNITY_TARGETS
+        .iter()
+        .filter(|(_, triple)| match host {
+            "macos" => triple.contains("apple"),
+            "linux" => triple.contains("linux") || triple.contains("android"),
+            "windows" => triple.contains("windows"),
+            _ => false,
+        })
+        .map(|(_, triple)| *triple)
+        .collect()
+}
+
+/// Build xybrid-ffi for Unity target platforms.
+///
+/// Orchestrates calls to `build_ffi()` for each target. By default, builds only
+/// for the host platform. With `--all-platforms`, builds all targets available
+/// on the current host OS.
+fn build_unity(all_platforms: bool, csharp: bool, deploy: bool) -> Result<()> {
+    println!("Building xybrid-ffi for Unity...\n");
+
+    if all_platforms {
+        let buildable = unity_targets_for_host();
+        let skipped: Vec<_> = UNITY_TARGETS
+            .iter()
+            .filter(|(_, triple)| !buildable.contains(triple))
+            .collect();
+
+        println!("All Unity targets:");
+        for (name, triple) in UNITY_TARGETS {
+            let available = buildable.contains(triple);
+            println!(
+                "  {} {} ({})",
+                if available { "✓" } else { "✗" },
+                name,
+                triple,
+            );
+        }
+        println!();
+
+        if !skipped.is_empty() {
+            println!(
+                "Skipping {} target(s) not available on this host OS.\n",
+                skipped.len()
+            );
+        }
+
+        if buildable.is_empty() {
+            anyhow::bail!("No Unity targets can be built on this host OS");
+        }
+
+        for (i, target) in buildable.iter().enumerate() {
+            println!(
+                "--- [{}/{}] Building for {} ---",
+                i + 1,
+                buildable.len(),
+                target
+            );
+            build_ffi(
+                Some(target.to_string()),
+                true,             // always release for Unity
+                None,             // auto-detect preset
+                csharp && i == 0, // only generate C# on first build
+                deploy,
+            )?;
+            println!();
+        }
+    } else {
+        // Build for host platform only
+        println!("Building for host platform (use --all-platforms for all targets)\n");
+        build_ffi(
+            None, // host platform
+            true, // always release
+            None, // auto-detect preset
+            csharp, deploy,
+        )?;
+    }
+
+    println!("✓ Unity build complete!");
+    Ok(())
+}
+
 /// Deploy the built xybrid-ffi library to the Unity bindings directory
 fn deploy_ffi_to_unity(dylib_path: &str, target: Option<&str>) -> Result<()> {
     println!("\nDeploying to Unity...");
@@ -783,8 +918,26 @@ fn deploy_ffi_to_unity(dylib_path: &str, target: Option<&str>) -> Result<()> {
         "Linux"
     };
 
-    // Unity native plugins directory
-    let unity_plugins_dir = PathBuf::from("bindings/unity/Runtime/Plugins").join(platform_dir);
+    // For Android, Unity expects ABI-specific subdirectories under Android/
+    let android_abi = if platform_dir == "Android" {
+        target.and_then(|t| match t {
+            "aarch64-linux-android" => Some("arm64-v8a"),
+            "armv7-linux-androideabi" => Some("armeabi-v7a"),
+            "x86_64-linux-android" => Some("x86_64"),
+            _ => None,
+        })
+    } else {
+        None
+    };
+
+    // Unity native plugins directory (with ABI subdir for Android)
+    let unity_plugins_dir = if let Some(abi) = android_abi {
+        PathBuf::from("bindings/unity/Runtime/Plugins")
+            .join(platform_dir)
+            .join(abi)
+    } else {
+        PathBuf::from("bindings/unity/Runtime/Plugins").join(platform_dir)
+    };
     std::fs::create_dir_all(&unity_plugins_dir).with_context(|| {
         format!(
             "Failed to create Unity plugins directory: {:?}",
@@ -811,6 +964,31 @@ fn deploy_ffi_to_unity(dylib_path: &str, target: Option<&str>) -> Result<()> {
             ),
         )?;
         println!("  ✓ Created folder .meta: {}", folder_meta.display());
+    }
+
+    // For Android ABI subdirectories, also create a .meta for the ABI folder
+    if let Some(abi) = android_abi {
+        let abi_meta = PathBuf::from("bindings/unity/Runtime/Plugins")
+            .join(platform_dir)
+            .join(format!("{}.meta", abi));
+        if !abi_meta.exists() {
+            let guid = format!(
+                "{:032x}",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_nanos()
+                    + 1 // offset to avoid guid collision with parent
+            );
+            std::fs::write(
+                &abi_meta,
+                format!(
+                    "fileFormatVersion: 2\nguid: {}\nfolderAsset: yes\nDefaultImporter:\n  externalObjects: {{}}\n  userData:\n  assetBundleName:\n  assetBundleVariant:\n",
+                    guid
+                ),
+            )?;
+            println!("  ✓ Created ABI folder .meta: {}", abi_meta.display());
+        }
     }
 
     // Copy the dynamic library
@@ -842,6 +1020,30 @@ fn deploy_ffi_to_unity(dylib_path: &str, target: Option<&str>) -> Result<()> {
         let meta_content = generate_plugin_meta(&guid, platform_dir);
         std::fs::write(&meta_path, meta_content)?;
         println!("  ✓ Created plugin .meta: {}", meta_path.display());
+    }
+
+    // Bundle ORT Android .so files alongside libxybrid_ffi.so (Android only)
+    if let Some(abi) = android_abi {
+        if let Some(ort_android_path) = resolve_ort_android_libs() {
+            let ort_abi_dir = ort_android_path.join(abi);
+            if ort_abi_dir.is_dir() {
+                for lib_name in &["libonnxruntime.so", "libc++_shared.so"] {
+                    let src = ort_abi_dir.join(lib_name);
+                    if src.exists() {
+                        let dst = unity_plugins_dir.join(lib_name);
+                        std::fs::copy(&src, &dst).with_context(|| {
+                            format!("Failed to copy ORT library {} to {:?}", lib_name, dst)
+                        })?;
+                        println!("  ✓ Bundled ORT: {}", dst.display());
+                    }
+                }
+            } else {
+                eprintln!(
+                    "  Warning: ORT Android libs not found for ABI {} at {:?}",
+                    abi, ort_abi_dir
+                );
+            }
+        }
     }
 
     // Also copy the C header
@@ -1532,6 +1734,52 @@ fn build_android(release: bool, abis: Vec<AndroidAbi>, version: &str) -> Result<
     println!("ABIs built:");
     for abi in &built_abis {
         println!("  - {}", abi);
+    }
+
+    Ok(())
+}
+
+/// Build xybrid-ffi for an Android target using cargo-ndk.
+///
+/// This uses the same cargo-ndk approach as the working Kotlin and Flutter
+/// Android CI workflows, which handles all NDK toolchain setup automatically
+/// (CC, CXX, linker, cmake, PATH, etc.).
+fn build_ffi_android(target: &str, release: bool, features: &str) -> Result<()> {
+    let has_cargo_ndk = Command::new("cargo")
+        .args(["ndk", "--version"])
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    if !has_cargo_ndk {
+        anyhow::bail!(
+            "cargo-ndk is required for Android FFI builds.\n\
+             Install with: cargo install cargo-ndk\n\
+             Also ensure ANDROID_NDK_HOME is set."
+        );
+    }
+
+    println!("  Using cargo-ndk for Android cross-compilation");
+
+    let mut cmd = Command::new("cargo");
+    cmd.arg("ndk")
+        .arg("--target")
+        .arg(target)
+        .arg("--platform")
+        .arg("28")
+        .arg("build")
+        .arg("-p")
+        .arg("xybrid-ffi")
+        .arg("--features")
+        .arg(features);
+
+    if release {
+        cmd.arg("--release");
+    }
+
+    let status = cmd.status().context("Failed to run cargo ndk build")?;
+    if !status.success() {
+        anyhow::bail!("cargo ndk build failed for {}", target);
     }
 
     Ok(())
