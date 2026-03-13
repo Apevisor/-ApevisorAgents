@@ -4,7 +4,7 @@
 //! available hardware and feature flags.
 
 use candle_core::Device;
-use log::{info, warn};
+use log::{debug, info, warn};
 
 /// Device selection preferences
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
