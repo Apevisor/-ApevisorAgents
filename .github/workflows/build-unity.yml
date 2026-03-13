@@ -607,6 +607,10 @@ jobs:
           # Remove .gitignore that blocks native libs — we WANT them on the upm branch
           rm -f "$PACKAGE_DIR/Runtime/Plugins/.gitignore"
 
+          # Remove iOS directory entirely — binary excluded due to 100 MB git limit.
+          # The .meta files would otherwise cause Unity "orphaned meta" errors.
+          rm -rf "$PACKAGE_DIR/Runtime/Plugins/iOS"
+
           # Remove .gitkeep files (no longer needed with real binaries)
           find "$PACKAGE_DIR" -name ".gitkeep" -delete
           find "$PACKAGE_DIR" -name ".gitkeep.meta" -delete
