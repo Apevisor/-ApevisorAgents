@@ -1041,6 +1041,32 @@ fn deploy_ffi_to_unity(dylib_path: &str, target: Option<&str>) -> Result<()> {
                             format!("Failed to copy ORT library {} to {:?}", lib_name, dst)
                         })?;
                         println!("  ✓ Bundled ORT: {}", dst.display());
+
+                        // Generate .meta for ORT dep if missing — Unity ignores files
+                        // in immutable packages that lack a .meta file.
+                        let ort_meta = dst.with_extension(format!(
+                            "{}.meta",
+                            dst.extension().unwrap_or_default().to_str().unwrap_or("")
+                        ));
+                        if !ort_meta.exists() {
+                            let guid = format!(
+                                "{:032x}",
+                                std::time::SystemTime::now()
+                                    .duration_since(std::time::UNIX_EPOCH)
+                                    .unwrap_or_default()
+                                    .as_nanos()
+                                    .wrapping_add(lib_name.len() as u128)
+                            );
+                            let cpu = match abi {
+                                "arm64-v8a" => "ARM64",
+                                "armeabi-v7a" => "ARMv7",
+                                "x86_64" => "x86_64",
+                                _ => "ARM64",
+                            };
+                            let meta_content = generate_android_plugin_meta(&guid, cpu);
+                            std::fs::write(&ort_meta, meta_content)?;
+                            println!("  ✓ Created ORT .meta: {}", ort_meta.display());
+                        }
                     }
                 }
             } else {
@@ -1086,6 +1112,15 @@ fn generate_plugin_meta(guid: &str, platform_dir: &str) -> String {
             "fileFormatVersion: 2\nguid: {guid}\nPluginImporter:\n  externalObjects: {{}}\n  serializedVersion: 3\n  iconMap: {{}}\n  executionOrder: {{}}\n  defineConstraints: []\n  isPreloaded: 0\n  isOverridable: 1\n  isExplicitlyReferenced: 0\n  validateReferences: 1\n  platformData:\n    Any:\n      enabled: 0\n      settings:\n        Exclude Editor: 0\n        Exclude Linux64: 0\n        Exclude OSXUniversal: 1\n        Exclude WebGL: 1\n        Exclude Win: 1\n        Exclude Win64: 1\n    Editor:\n      enabled: 1\n      settings:\n        CPU: AnyCPU\n        DefaultValueInitialized: true\n        OS: AnyOS\n    Linux64:\n      enabled: 1\n      settings:\n        CPU: x86_64\n  userData:\n  assetBundleName:\n  assetBundleVariant:\n"
         ),
     }
+}
+
+/// Generate a Unity .meta file for an Android plugin with the correct ABI CPU setting.
+/// Used for ORT dependency .so files (libonnxruntime.so, libc++_shared.so) which share
+/// the same platform settings as the main library but need an ABI-specific CPU value.
+fn generate_android_plugin_meta(guid: &str, cpu: &str) -> String {
+    format!(
+        "fileFormatVersion: 2\nguid: {guid}\nPluginImporter:\n  externalObjects: {{}}\n  serializedVersion: 3\n  iconMap: {{}}\n  executionOrder: {{}}\n  defineConstraints: []\n  isPreloaded: 0\n  isOverridable: 1\n  isExplicitlyReferenced: 0\n  validateReferences: 1\n  platformData:\n    Any:\n      enabled: 0\n      settings:\n        Exclude Editor: 1\n        Exclude Linux64: 1\n        Exclude OSXUniversal: 1\n        Exclude WebGL: 1\n        Exclude Win: 1\n        Exclude Win64: 1\n    Android:\n      enabled: 1\n      settings:\n        CPU: {cpu}\n    Editor:\n      enabled: 0\n      settings:\n        CPU: AnyCPU\n        DefaultValueInitialized: true\n        OS: AnyOS\n  userData:\n  assetBundleName:\n  assetBundleVariant:\n"
+    )
 }
 
 /// Generate Swift/Kotlin bindings using uniffi-bindgen
