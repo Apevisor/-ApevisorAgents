@@ -24,7 +24,8 @@ This document provides a comprehensive reference for all feature flags, platform
 | **ort-download** | Download prebuilt ONNX Runtime binaries | `ort/download-binaries`, `ort/tls-native` |
 | **ort-dynamic** | Load ONNX Runtime .so at runtime | `ort/load-dynamic` |
 | **ort-coreml** | Apple Neural Engine acceleration | `ort/coreml` |
-| **candle** | Pure Rust ML framework (Whisper) | `candle-core`, `candle-nn`, `candle-transformers`, `safetensors`, `hf-hub`, `byteorder`, `num-traits` |
+| **candle** | Pure Rust ML framework (Whisper) — Android-compatible | `candle-core`, `candle-nn`, `candle-transformers`, `safetensors`, `byteorder`, `num-traits` |
+| **candle-hub** | Candle + HuggingFace Hub download support | `candle`, `hf-hub` (requires OpenSSL — **not for Android**) |
 | **candle-metal** | Candle with Metal GPU acceleration | `candle`, `candle-core/metal`, `candle-nn/metal` |
 | **candle-cuda** | Candle with CUDA GPU acceleration | `candle`, `candle-core/cuda` |
 | **llm-mistral** | mistral.rs LLM backend (CPU) | `mistralrs` |
@@ -46,14 +47,15 @@ This document provides a comprehensive reference for all feature flags, platform
 | Feature | Description | Forwards to xybrid-core |
 |---------|-------------|-------------------------|
 | **default** | No default features | *(none)* |
-| **platform-android** | Android preset | `ort-dynamic`, `llm-llamacpp` |
-| **platform-ios** | iOS preset | `ort-download`, `ort-coreml`, `candle-metal`, `llm-llamacpp` |
-| **platform-macos** | macOS preset | `ort-download`, `ort-coreml`, `candle-metal`, `llm-llamacpp` |
+| **platform-android** | Android preset | `ort-dynamic`, `candle`, `llm-llamacpp` |
+| **platform-ios** | iOS preset | `ort-download`, `ort-coreml`, `candle-metal`, `candle-hub`, `llm-llamacpp` |
+| **platform-macos** | macOS preset | `ort-download`, `ort-coreml`, `candle-metal`, `candle-hub`, `llm-llamacpp` |
 | **platform-desktop** | Desktop (Linux/Windows) preset | `ort-download`, `llm-llamacpp` |
 | **ort-download** | Forward to core | `xybrid-core/ort-download` |
 | **ort-dynamic** | Forward to core | `xybrid-core/ort-dynamic` |
 | **ort-coreml** | Forward to core | `xybrid-core/ort-coreml` |
 | **candle** | Forward to core | `xybrid-core/candle` |
+| **candle-hub** | Forward to core | `xybrid-core/candle-hub` |
 | **candle-metal** | Forward to core | `xybrid-core/candle-metal` |
 | **candle-cuda** | Forward to core | `xybrid-core/candle-cuda` |
 | **llm-mistral** | Forward to core | `xybrid-core/llm-mistral` |
@@ -92,7 +94,7 @@ Platform presets are the **single source of truth** for platform-specific featur
 
 | Preset | Target Platform | Core Features Enabled | Rationale |
 |--------|-----------------|----------------------|-----------|
-| **platform-android** | Android (all ABIs) | `ort-dynamic`, `llm-llamacpp` | Dynamic ORT loading for AAR distribution; llama.cpp has runtime SIMD detection; mistral.rs causes SIGILL on devices without ARMv8.2-A FP16 |
+| **platform-android** | Android (all ABIs) | `ort-dynamic`, `candle`, `llm-llamacpp` | Dynamic ORT loading for AAR distribution; Candle (CPU) for Whisper ASR; llama.cpp has runtime SIMD detection; mistral.rs causes SIGILL on devices without ARMv8.2-A FP16 |
 | **platform-ios** | iOS (arm64, simulator) | `ort-download`, `ort-coreml`, `candle-metal`, `llm-llamacpp` | Static ORT linking; CoreML for ANE acceleration; Metal for GPU |
 | **platform-macos** | macOS (arm64, x86_64) | `ort-download`, `ort-coreml`, `candle-metal`, `llm-llamacpp` | Same as iOS - unified Apple platform features |
 | **platform-desktop** | Linux, Windows | `ort-download`, `llm-llamacpp` | Static ORT linking; llama.cpp for LLM inference (unified across all platforms) |

@@ -10,3 +10,9 @@ xtask = "run --package xtask --"
 # See: https://github.com/Narsil/esaxx-rs/issues/11
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "link-args=/NODEFAULTLIB:LIBCMT"]
+
+# Android aarch64: enable +fp16 so the assembler accepts FP16 SIMD instructions in
+# gemm-f16 (candle dependency). The binary is still safe on older devices — gemm-f16
+# uses is_aarch64_feature_detected!("fp16") at runtime and falls back to scalar.
+[target.aarch64-linux-android]
+rustflags = ["-C", "target-feature=+fp16"]
