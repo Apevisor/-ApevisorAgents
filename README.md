@@ -21,6 +21,7 @@
   <a href="#sdks">SDKs</a> ·
   <a href="https://www.xybrid.ai/models">Models</a> ·
   <a href="https://discord.gg/YhFHHkhbad">Join Discord</a> ·
+  <a href="https://x.com/xybrid_ai">Follow on X</a> ·
   <a href="https://github.com/xybrid-ai/xybrid/issues">Issues</a>
 </p>
 
@@ -317,6 +318,7 @@ All models run entirely on-device. No cloud, no API keys required. Browse the fu
 
 - [Documentation](https://docs.xybrid.dev)
 - [Discord](https://discord.gg/YhFHHkhbad)
+- [X (Twitter)](https://x.com/xybrid_ai)
 - [GitHub Issues](https://github.com/xybrid-ai/xybrid/issues)
 
 ## Contributing

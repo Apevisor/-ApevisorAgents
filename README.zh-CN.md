@@ -21,6 +21,7 @@
   <a href="#sdk">SDK</a> ·
   <a href="https://www.xybrid.ai/models">模型</a> ·
   <a href="https://discord.gg/YhFHHkhbad">加入 Discord</a> ·
+  <a href="https://x.com/xybrid_ai">关注 X</a> ·
   <a href="https://github.com/xybrid-ai/xybrid/issues">问题反馈</a>
 </p>
 
@@ -317,6 +318,7 @@ let result = pipeline.run(&Envelope::audio(audio_bytes))?;
 
 - [文档](https://docs.xybrid.dev)
 - [Discord](https://discord.gg/YhFHHkhbad)
+- [X (Twitter)](https://x.com/xybrid_ai)
 - [GitHub Issues](https://github.com/xybrid-ai/xybrid/issues)
 
 ## 贡献
