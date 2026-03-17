@@ -4,6 +4,7 @@
 //! available hardware and feature flags.
 
 use candle_core::Device;
+#[allow(unused_imports)]
 use log::{debug, info, warn};
 
 /// Device selection preferences
