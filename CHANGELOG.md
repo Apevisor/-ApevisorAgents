@@ -13,6 +13,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0-beta6] - 2026-03-18
+
+### Fixed
+
+- **Android FP16 assembler**: Fixed FP16 assembler issue on Android builds
+- **Android OpenSSL**: Fixed whisper OpenSSL pull on Android
+- **Unity macOS and Linux builds**: Fixed build failures for Unity on macOS and Linux
+- **Unity missing meta files**: Added missing Unity `.meta` files
+- **Candle device module**: Added missing `Debug` import in candle device module
+- **Android bindings cleanup**: Removed committed `.gradle/` files from Android bindings
+
+### Changed
+
+- **CI: Strip Android and Linux builds for Unity**: Reduced binary size by stripping symbols
+- **CI: Removed iOS from UPM build** temporarily
+- **Documentation updates**: Cleaned up READMEs, added X social link
+
+---
+
 ## [0.1.0-beta5] - 2026-03-11
 
 ### Added
