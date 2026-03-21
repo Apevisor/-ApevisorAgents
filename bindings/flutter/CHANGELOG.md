@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-beta7
+
+* Fixed `libc++_shared.so` missing from Android APK — replaced symlinks with NDK copy task
+* Fixed Android 16KB page alignment for newer devices
+
 ## 0.1.0-beta6
 
 * Version bump to track core release. No Flutter API changes.

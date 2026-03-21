@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0-beta7] - 2026-03-21
+
+### Added
+
+- **Android sample app overhaul**: Audio playback via `PcmPlayer`, improved `InferenceCard` and `ModelLoadingCard` UI components, updated model catalog
+
+### Fixed
+
+- **Android 16KB page alignment**: Added `-Wl,-z,max-page-size=16384` linker flag for Android targets to support 16KB page size devices
+- **Android `libc++_shared.so` missing from APK**: Replaced broken symlinks with a `copyNdkLibs` Gradle task that copies from the NDK at build time (fixes pub.dev packaging)
+
+---
+
 ## [0.1.0-beta6] - 2026-03-18
 
 ### Fixed
