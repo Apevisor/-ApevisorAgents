@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-beta8
+
+* Fixed LLM model loading failing with "Unknown frame descriptor" on all platforms — passthrough GGUF models now load correctly (#16)
+
 ## 0.1.0-beta7
 
 * Fixed `libc++_shared.so` missing from Android APK — replaced symlinks with NDK copy task

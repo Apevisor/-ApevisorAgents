@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0-beta8] - 2026-03-24
+
+### Fixed
+
+- **LLM model loading on Android**: Fixed "Unknown frame descriptor" error when loading passthrough GGUF models (gemma-3-1b, smollm2-360m, qwen-3.5-0.8b) — `load_from_registry_api` now uses `fetch_extracted()` to correctly handle both `.xyb` bundles and passthrough variants (#16)
+
+---
+
 ## [0.1.0-beta7] - 2026-03-21
 
 ### Added
