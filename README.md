@@ -274,23 +274,23 @@ All models run entirely on-device. No cloud, no API keys required. Browse the fu
 | Qwen3-TTS 0.6B | TTS | 600M | P2 | Blocked (needs custom SafeTensors runtime) |
 | Chatterbox Turbo | TTS | 350M | P3 | Blocked (needs ModelGraph template) |
 
-### Bring Your Own Model
+### Bring Your Own Model (Experimental)
+
+> **Note**: BYM support is experimental. The `model_metadata.json` schema is stable, but the AI-assisted tooling (`/xybrid-init`) is under active development and may not handle all model types yet.
 
 Xybrid works with **any** ONNX, GGUF, or SafeTensors model. You just need a `model_metadata.json` that tells xybrid how to run it.
 
-**With Claude Code** (recommended):
+**With an AI assistant** (Claude Code, Codex, etc.):
 
 ```sh
-# One-liner — generates model_metadata.json from a HuggingFace model card
+# Install xybrid skills into your project
+curl -sSL https://raw.githubusercontent.com/xybrid-ai/xybrid/master/tools/scripts/install-skills.sh | sh
+
+# Generate model_metadata.json from a HuggingFace model
 claude /xybrid-init hexgrad/Kokoro-82M-v1.0-ONNX
 ```
 
-If you don't have the xybrid repo cloned, install the skills first:
-
-```sh
-curl -sSL https://raw.githubusercontent.com/xybrid-ai/xybrid/master/tools/scripts/install-skills.sh | sh
-claude /xybrid-init your-org/your-model
-```
+Skills are agent-agnostic and live in [`agents/skills/`](agents/skills/). The installer symlinks them for Claude Code (`.claude/skills`) and Codex (`.codex/skills`).
 
 **Manually** — create `model_metadata.json` in your model directory:
 

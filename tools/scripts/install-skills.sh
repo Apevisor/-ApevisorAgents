@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install xybrid Claude Code skills into your project.
+# Install xybrid AI skills into your project.
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/xybrid-ai/xybrid/master/tools/scripts/install-skills.sh | sh
@@ -7,49 +7,66 @@
 # Or run directly:
 #   ./install-skills.sh
 #
-# This adds /xybrid-init and /test-model commands to your Claude Code session.
+# This adds /xybrid-init and /test-model skills to Claude Code, Codex, and other
+# AI assistants that support the agents/skills/ convention.
 
 set -euo pipefail
 
 REPO="xybrid-ai/xybrid"
 BRANCH="master"
 BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
-TARGET_DIR=".claude/commands"
 
 SKILLS=(
-  "xybrid-init.md"
-  "test-model.md"
+  "xybrid-init"
+  "test-model"
 )
 
-echo "Installing xybrid Claude Code skills..."
+echo "Installing xybrid AI skills..."
 echo ""
 
-mkdir -p "${TARGET_DIR}"
+# Create canonical location
+mkdir -p agents/skills
 
 for skill in "${SKILLS[@]}"; do
-  url="${BASE_URL}/.claude/commands/${skill}"
-  dest="${TARGET_DIR}/${skill}"
+  url="${BASE_URL}/agents/skills/${skill}/SKILL.md"
+  dest="agents/skills/${skill}"
 
-  if [ -f "${dest}" ]; then
+  mkdir -p "${dest}"
+
+  if [ -f "${dest}/SKILL.md" ]; then
     echo "  Updating ${skill}..."
   else
     echo "  Installing ${skill}..."
   fi
 
   if command -v curl &> /dev/null; then
-    curl -sSL "${url}" -o "${dest}"
+    curl -sSL "${url}" -o "${dest}/SKILL.md"
   elif command -v wget &> /dev/null; then
-    wget -q "${url}" -O "${dest}"
+    wget -q "${url}" -O "${dest}/SKILL.md"
   else
     echo "Error: curl or wget is required" >&2
     exit 1
   fi
 done
 
+# Set up symlinks for AI tools that use their own directories
+for tool_dir in .claude .codex; do
+  skills_link="${tool_dir}/skills"
+  if [ -L "${skills_link}" ]; then
+    echo "  ${skills_link} symlink already exists"
+  elif [ -d "${skills_link}" ]; then
+    echo "  Warning: ${skills_link} is a directory, skipping symlink"
+  else
+    mkdir -p "${tool_dir}"
+    ln -s ../agents/skills "${skills_link}"
+    echo "  Created ${skills_link} -> agents/skills/"
+  fi
+done
+
 echo ""
-echo "Done! Skills installed to ${TARGET_DIR}/"
+echo "Done! Skills installed to agents/skills/"
 echo ""
-echo "Available commands:"
+echo "Available skills:"
 echo "  /xybrid-init    Generate model_metadata.json for any ML model"
 echo "  /test-model     Test a model end-to-end with xybrid"
 echo ""
