@@ -1,369 +1,189 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ApeVisar/ApevisorAI/main/apevisor-removebg-preview.png" width="300"/>
+</p>
+<h1 align="center">Apevisor</h1>
 <div align="center">
-<p align="center">
-  <a href="./README.md">English</a> · <a href="./README.zh-CN.md">简体中文</a>
-</p>
-
-
-<p align="center">
-  <img src="./docs/logo.jpg" alt="Xybrid Logo" width="180"/>
-</p>
-
-<h1 align="center">Xybrid</h1>
-
-<p align="center">
-  <strong>Run LLMs, ASR, and TTS natively in apps and games.</strong><br/>
-  Rust core · iOS · Android · Flutter · Unity<br/>
-  Private, offline, no cloud required.
-</p>
-
-<p align="center">
-  <a href="https://docs.xybrid.dev">Documentation</a> ·
-  <a href="#sdks">SDKs</a> ·
-  <a href="https://www.xybrid.ai/models">Models</a> ·
-  <a href="https://discord.gg/YhFHHkhbad">Join Discord</a> ·
-  <a href="https://x.com/xybrid_ai">Follow on X</a> ·
-  <a href="https://github.com/xybrid-ai/xybrid/issues">Issues</a>
-</p>
-
-<p align="center">
-
-[![Website][website-shield]][website-url]
-[![Discord][discord-shield]][discord-url]
-[![Twitter][twitter-shield]][twitter-url]
-<br>
-[![License][license-shield]][license-url]
-[![Build][build-shield]][build-url]
-[![Stars][stars-shield]][stars-url]
-[![Release][release-shield]][release-url]
-[![Release Date][release-date-shield]][release-url]
-<br>
-[![pub.dev][pubdev-shield]][pubdev-url]
-[![Maven Central][maven-shield]][maven-url]
-
-</p>
-
-[website-shield]: https://img.shields.io/badge/xybrid.ai-4285F4?style=flat
-[website-url]: https://www.xybrid.ai/
-[discord-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdiscord.com%2Fapi%2Finvites%2FYhFHHkhbad%3Fwith_counts%3Dtrue&query=%24.approximate_member_count&logo=discord&logoColor=white&label=Discord&color=5865F2&suffix=%20members
-[discord-url]: https://discord.gg/YhFHHkhbad
-[twitter-shield]: https://img.shields.io/twitter/follow/xybrid_ai
-[twitter-url]: https://x.com/xybrid_ai
-[license-shield]: https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat
-[license-url]: https://opensource.org/licenses/Apache-2.0
-[build-shield]: https://img.shields.io/github/actions/workflow/status/xybrid-ai/xybrid/ci.yml?branch=master&style=flat
-[build-url]: https://github.com/xybrid-ai/xybrid/actions
-[stars-shield]: https://img.shields.io/github/stars/xybrid-ai/xybrid?style=flat
-[stars-url]: https://github.com/xybrid-ai/xybrid/stargazers
-[release-shield]: https://img.shields.io/github/v/release/xybrid-ai/xybrid?style=flat&sort=semver
-[release-url]: https://github.com/xybrid-ai/xybrid/releases
-[release-date-shield]: https://img.shields.io/github/release-date/xybrid-ai/xybrid?style=flat
-[pubdev-shield]: https://img.shields.io/pub/v/xybrid_flutter?style=flat&label=pub.dev
-[pubdev-url]: https://pub.dev/packages/xybrid_flutter
-[maven-shield]: https://img.shields.io/maven-central/v/ai.xybrid/xybrid-kotlin?style=flat&label=Maven%20Central
-[maven-url]: https://central.sonatype.com/artifact/ai.xybrid/xybrid-kotlin
+  <p><strong>AI-native platform of on-chain agents that transforms token, wallet, and narrative data into clear risk context before you trade</strong></p>
+  <p>
+    Token intelligence • Wallet profiling • Narrative research • Real-time terminal • Credit-based execution
+  </p>
 </div>
 
-<p align="center">
-  <img src="docs/demo-desktop.gif" alt="Desktop demo" width="540">&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="docs/demo-android.gif" alt="Android demo" width="150">
-</p>
-
-
-
-## Start Here
-
-| Goal | Path |
-|------|------|
-| Fastest demo (2 min) | [Download CLI →](https://github.com/xybrid-ai/xybrid/releases) |
-| Build a mobile or desktop app | [Flutter SDK →](bindings/flutter/) |
-| Add AI NPCs to your game | [Unity SDK →](bindings/unity/) and try the [3D tavern demo](https://github.com/xybrid-ai/xybrid-unity-tavern) |
-| Android native | [Kotlin SDK →](bindings/kotlin/) |
-| Rust / embedded | [Core crate →](crates/) |
----
-
-<p align="center">
-  <img src="docs/game-demo.gif" alt="Game demo" width="540">
-</p>
-
-## SDKs
-
-Xybrid is a **Rust-powered runtime** with native bindings for every major platform.
-
-| SDK | Platforms | Install | Status | Sample |
-|-----|-----------|---------|--------|--------|
-| **[Flutter](bindings/flutter/)** | iOS, Android, macOS, Linux, Windows | [pub.dev](https://pub.dev/packages/xybrid_flutter) | Available | [README](examples/flutter/README.md) |
-| **[Unity](bindings/unity/)** | macOS, Windows, Linux, iOS, Android | [See below](#install) | Available | [Unity 3D AI tavern](https://github.com/xybrid-ai/xybrid-unity-tavern) |
-| **[Swift](bindings/apple/)** | iOS, macOS | Swift Package Manager | Coming Soon | [README](examples/ios/README.md) |
-| **[Kotlin](bindings/kotlin/)** | Android | Maven Central | Available | [README](examples/android/README.md) |
-| **[CLI](https://github.com/xybrid-ai/xybrid/releases)** | macOS, Linux, Windows | [Download binary](https://github.com/xybrid-ai/xybrid/releases) | Available | — |
-| **[Rust](crates/)** | All | `xybrid-core` / `xybrid-sdk` | Available | — |
-
-Every SDK wraps the same Rust core — identical model support and behavior across all platforms.
-
-### Install
-
-**Unity** — Package Manager → Add from git URL:
-
-```bash
-https://github.com/xybrid-ai/xybrid.git#upm
-```
-
-> The `upm` branch contains pre-built native libraries for all platforms.
-> To pin a specific version: `https://github.com/xybrid-ai/xybrid.git#upm/v0.1.0-beta8`
-
-**Flutter** — add to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  xybrid_flutter: ^0.1.0
-```
-
-**Kotlin (Android)** — add to your `build.gradle.kts`:
-
-```gradle
-dependencies {
-    implementation("ai.xybrid:xybrid-kotlin:0.1.0-beta8")
-}
-```
+[![Web App](https://img.shields.io/badge/Web%20App-Open-3b82f6?style=for-the-badge&logo=googlechrome&logoColor=white)](https://app.apevisor.io)
+[![Telegram Mini App](https://img.shields.io/badge/Telegram%20Mini%20App-Launch-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/apevisor_bot)
+[![Docs](https://img.shields.io/badge/Docs-Read-8b5cf6?style=for-the-badge&logo=readthedocs&logoColor=white)](https://docs.apevisor.io)
+[![X.com](https://img.shields.io/badge/X.com-Follow-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/apevisor)
+[![Telegram Community](https://img.shields.io/badge/Telegram%20Community-Join-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/apevisor)
 
 ---
 
-## Quick Start
+## Overview
 
-See each SDK's README for platform-specific setup: [Flutter](bindings/flutter/) · [Unity](bindings/unity/) · [Swift](bindings/apple/) · [Kotlin](bindings/kotlin/) · [Rust](crates/)
+Apevisor is an AI-native platform of on-chain agents designed for Solana traders
 
-### Single Model
+It connects token analysis, wallet intelligence, narrative tracking, and execution into one system
 
-Run a model in one line from the CLI, or three lines from any SDK:
-
-**CLI:**
-```sh
-xybrid run kokoro-82m --input "Hello world" -o output.wav
-```
-
-**Flutter:**
-```dart
-final model = await Xybrid.model('kokoro-82m').load();
-final result = await model.run(XybridEnvelope.text('Hello world'));
-// result → 24kHz WAV audio
-```
-
-**Kotlin:**
-```kotlin
-val model = XybridModelLoader.fromRegistry("kokoro-82m").load()
-val result = model.run(Envelope.text("Hello world"))
-// result → 24kHz WAV audio
-```
-
-**Swift:**
-```swift
-let model = try ModelLoader.fromRegistry(modelId: "kokoro-82m").load()
-let result = try model.run(envelope: Envelope.text("Hello world"))
-// result → 24kHz WAV audio
-```
-
-**Unity (C#):**
-```csharp
-var model = XybridClient.LoadModel("kokoro-82m");
-var result = model.Run(Envelope.Text("Hello world"));
-// result → 24kHz WAV audio
-```
-
-**Rust:**
-```rust
-let model = Xybrid::model("kokoro-82m").load()?;
-let result = model.run(&Envelope::text("Hello world"))?;
-// result → 24kHz WAV audio
-```
-
-### Pipelines
-
-Chain models together — build a voice assistant in 3 lines of YAML:
-
-```yaml
-# voice-assistant.yaml
-name: voice-assistant
-stages:
-  - model: whisper-tiny    # Speech → text
-  - model: qwen2.5-0.5b    # Process with LLM
-  - model: kokoro-82m      # Text → speech
-```
-
-**CLI:**
-```sh
-xybrid run voice-assistant.yaml --input question.wav -o response.wav
-```
-
-**Flutter:**
-```dart
-final pipeline = Xybrid.pipeline(yaml: yamlString);
-final result = await pipeline.run(XybridEnvelope.audio(bytes: audioBytes, sampleRate: 16000));
-```
-
-**Kotlin:**
-```kotlin
-// Pipeline support coming soon — use single model loading for now
-```
-
-**Swift:**
-```swift
-// Pipeline support coming soon — use single model loading for now
-```
-
-**Unity (C#):**
-```csharp
-// Pipeline support coming soon — use single model loading for now
-```
-
-**Rust:**
-```rust
-let pipeline = Xybrid::pipeline(&yaml_string).load()?;
-pipeline.load_models()?;
-let result = pipeline.run(&Envelope::audio(audio_bytes))?;
-```
----
-
-## Supported Models
-
-All models run entirely on-device. No cloud, no API keys required. Browse the full registry with `xybrid models list`.
-
-### Start with these
-
-| Model | Type | Params | Why start here |
-|-------|------|--------|----------------|
-| **SmolLM2 360M** | LLM | 360M | Best quality-to-size ratio for any device |
-| **Kokoro 82M** | TTS | 82M | High-quality speech, 24 voices, fast |
-| **Whisper Tiny** | ASR | 39M | Accurate multilingual transcription |
-
-### Speech-to-Text
-
-| Model | Params | Format | Description |
-|-------|--------|--------|-------------|
-| Whisper Tiny | 39M | SafeTensors | Multilingual transcription (Candle runtime) |
-| Wav2Vec2 Base | 95M | ONNX | English ASR with CTC decoding |
-
-### Text-to-Speech
-
-| Model | Params | Format | Description |
-|-------|--------|--------|-------------|
-| Kokoro 82M | 82M | ONNX | High-quality, 24 natural voices |
-| KittenTTS Nano | 15M | ONNX | Ultra-lightweight, 8 voices |
-
-### Language Models
-
-| Model | Params | Format | Description |
-|-------|--------|--------|-------------|
-| Gemma 3 1B | 1B | GGUF Q4_K_M | Google's mobile-optimized LLM |
-| LFM2.5 350M | 354M | GGUF Q4_K_M | Liquid AI's hybrid conv+attention, 9 languages, tool calling |
-| Llama 3.2 1B | 1B | GGUF Q4_K_M | Meta's general purpose, 128K context |
-| Qwen 2.5 0.5B | 500M | GGUF Q4_K_M | Compact on-device chat |
-| Qwen 3.5 0.8B | 800M | GGUF Q4_K_M | Latest Qwen with reasoning (thinking mode) |
-| Qwen 3.5 2B | 2B | GGUF Q4_K_M | Larger Qwen 3.5 with extended reasoning |
-| SmolLM2 360M | 360M | GGUF Q4_K_M | Best tiny LLM, excellent quality/size ratio |
-
-### Coming Soon
-
-| Model | Type | Params | Priority | Status |
-|-------|------|--------|----------|--------|
-| Phi-4 Mini | LLM | 3.8B | P2 | Spec Ready (first multi-quant: Q4, Q8, FP16) |
-| Qwen3 0.6B | LLM | 600M | P2 | Planned |
-| Trinity Nano | LLM (MoE) | 6B (1B active) | P2 | Planned |
-| LFM2-VL 700M | Vision+LLM | 700M | P2 | Planned |
-| Nomic Embed Text v1.5 | Embeddings | 137M | P1 | Blocked (needs Tokenize/MeanPool steps) |
-| LFM2-VL 450M | Vision | 450M | P2 | Planned |
-| Whisper Tiny CoreML | ASR | 39M | P2 | Planned |
-| Qwen3-TTS 0.6B | TTS | 600M | P2 | Blocked (needs custom SafeTensors runtime) |
-| Chatterbox Turbo | TTS | 350M | P3 | Blocked (needs ModelGraph template) |
-
-### Bring Your Own Model (Experimental)
-
-> **Note**: BYM support is experimental. The `model_metadata.json` schema is stable, but the AI-assisted tooling (`/xybrid-init`) is under active development and may not handle all model types yet.
-
-Xybrid works with **any** ONNX, GGUF, or SafeTensors model. You just need a `model_metadata.json` that tells xybrid how to run it.
-
-**With an AI assistant** (Claude Code, Codex, etc.):
-
-```sh
-# Install xybrid skills into your project
-curl -sSL https://raw.githubusercontent.com/xybrid-ai/xybrid/master/tools/scripts/install-skills.sh | sh
-
-# Generate model_metadata.json from a HuggingFace model
-claude /xybrid-init hexgrad/Kokoro-82M-v1.0-ONNX
-```
-
-Skills are agent-agnostic and live in [`agents/skills/`](agents/skills/). The installer symlinks them for Claude Code (`.claude/skills`) and Codex (`.codex/skills`).
-
-**Manually** — create `model_metadata.json` in your model directory:
-
-```json
-{
-  "model_id": "my-model",
-  "version": "1.0",
-  "execution_template": { "type": "Onnx", "model_file": "model.onnx" },
-  "preprocessing": [],
-  "postprocessing": [],
-  "files": ["model.onnx"],
-  "metadata": { "task": "text-generation" }
-}
-```
-
-See the [model metadata docs](docs/sdk/API_REFERENCE.md) for the full schema, or look at existing examples in [`integration-tests/fixtures/models/`](integration-tests/fixtures/models/).
+> [!IMPORTANT]
+> Best experience comes from using the full workflow — Terminal → Intel → Decision → Execution
 
 ---
 
-## Features
+## ⚡ Quick Overview
 
-| Capability | iOS | Android | macOS | Linux | Windows |
-|------------|-----|---------|-------|-------|---------|
-| Speech-to-Text | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Text-to-Speech | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Language Models | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Vision Models | 🔜 | 🔜 | 🔜 | 🔜 | 🔜 |
-| Embeddings | 🔜 | 🔜 | 🔜 | 🔜 | 🔜 |
-| Pipeline Orchestration | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Model Download & Caching | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Hardware Acceleration | Metal, ANE | CPU | Metal, ANE | CUDA | CUDA |
-
-**SDK pipeline support:** Flutter ✅ · Rust ✅ · Kotlin 🔜 · Swift 🔜 · Unity 🔜
+| What | Description |
+|------|------------|
+| Product | AI-native on-chain platform |
+| Core | Token, Wallet, Narrative intelligence |
+| Value | Turns chaos into risk clarity |
+| Users | Degen traders, analysts |
+| Model | Credits via $APE |
 
 ---
 
-## Why Xybrid?
+## 💡 Why Apevisor
 
-- **Privacy first** — All inference runs on-device. Your data never leaves the device.
-- **Offline capable** — No internet required after initial model download.
-- **Cross-platform** — One API across iOS, Android, macOS, Linux, and Windows.
-- **Pipeline orchestration** — Chain models together (ASR → LLM → TTS) in a single call.
-- **Automatic optimization** — Hardware acceleration on Apple Neural Engine, Metal, and CUDA.
-
-### How it compares
-
-| | Xybrid | Ollama | llama.cpp | ONNX Runtime |
-|---|---|---|---|---|
-| Mobile (iOS/Android) | ✅ | ❌ | ❌ | ✅ |
-| Game engine (Unity) | ✅ | ❌ | ❌ | ❌ |
-| Multi-stage pipelines | ✅ | ❌ | ❌ | ❌ |
-| ASR + TTS + LLM in one SDK | ✅ | ❌ | ❌ | ❌ |
-| Runs in-process (no server) | ✅ | ❌ | ✅ | ✅ |
-| No cloud required | ✅ | ✅ | ✅ | ✅ |
+Apevisor does not remove risk  
+It makes risk visible before you commit size
 
 ---
 
-## Community
+## What You Can Do
 
-- [Documentation](https://docs.xybrid.dev)
-- [Discord](https://discord.gg/YhFHHkhbad)
-- [X (Twitter)](https://x.com/xybrid_ai)
-- [GitHub Issues](https://github.com/xybrid-ai/xybrid/issues)
+| Action | Result |
+|--------|--------|
+| Scan token | Understand risk before entry |
+| Analyze wallet | Decode behavior and portfolio |
+| Track narratives | Follow capital rotation |
+| Use agents | Automate scanning |
+| Simulate tokenomics | Detect structural risks early |
 
-## Contributing
+---
 
-We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on setting up your development environment, submitting pull requests, and adding new models.
+## 🔄 Typical Workflow
 
-## Star History
+Market Terminal  
+↓  
+Token Intel  
+↓  
+Wallet / Narrative  
+↓  
+Decision  
+↓  
+Execution  
 
-[![Star History Chart](https://api.star-history.com/svg?repos=xybrid-ai/xybrid&type=date&legend=bottom-right)](https://www.star-history.com/#xybrid-ai/xybrid&type=date&legend=bottom-right)
+---
 
-## License
+## Example Scenarios
 
-Apache License 2.0 — see [LICENSE](./LICENSE) for details.
+- New token → run Token Intel → evaluate → size or skip  
+- Unknown wallet → run Wallet Intel → classify → follow or ignore  
+- Narrative heating → scan → pick leaders → act early  
+
+---
+
+## 🧠 Core Features
+
+### 🧠 Token Intel
+> [!TIP]
+> Always run before entering a position
+
+- Contract checks  
+- Liquidity analysis  
+- Holder structure  
+- Risk commentary  
+
+> [!WARNING]
+> High score does not mean safe — always verify liquidity and holders  
+
+---
+
+### 👛 Wallet Intel
+> [!NOTE]
+> Behavior ≠ guaranteed future performance  
+
+- Portfolio breakdown  
+- Behavior profiling  
+- Risk signals  
+- Wallet comparisons  
+
+---
+
+### 📡 Narrative Scanner
+
+- Narrative heat tracking  
+- Capital flow detection  
+- Token clustering  
+- AI summaries  
+
+---
+
+### 🤖 Custom Agents
+> [!CAUTION]
+> Bad configuration can burn credits fast  
+
+- Pattern-based logic  
+- Universe filters  
+- Action rules  
+- Safety limits  
+
+---
+
+### 🧪 Token Simulator
+
+- Supply modeling  
+- Unlock stress tests  
+- Liquidity pressure checks  
+
+---
+
+## 📊 Credits System
+
+| Action | Cost |
+|--------|------|
+| Token scan | 0.6 |
+| Wallet scan | 0.85 |
+| Narrative | 1.0 |
+| Simulation | 1.5 |
+
+> [!NOTE]
+> Credits are shared across Web, Telegram, and Agents  
+
+---
+
+## 🚀 Getting Started
+
+1. Open the app  
+2. Connect wallet  
+3. Run first scan  
+4. Review risk  
+5. Execute or skip  
+
+---
+
+## Roadmap
+
+### Phase 1 — Intelligence Layer
+- Market Terminal  
+- Token Intel  
+- Wallet Intel  
+- Narrative Scanner  
+
+### Phase 2 — Automation
+- Custom Agents  
+- Agent limits  
+- Backtesting (planned)  
+
+### Phase 3 — Expansion
+- Advanced execution  
+- Cross-platform sync  
+- API scaling  
+
+---
+
+## Disclaimer
+
+Apevisor is a decision-support platform  
+
+It does not provide financial advice  
+
+All trading decisions and risks remain on the user  
