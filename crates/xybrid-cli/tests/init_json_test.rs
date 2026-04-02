@@ -24,10 +24,15 @@ fn workspace_root() -> std::path::PathBuf {
 #[test]
 fn test_init_json_on_mnist_fixture() {
     // Copy the mnist model.onnx to a temp directory (without model_metadata.json)
-    let tmp = tempfile::tempdir().expect("Failed to create temp dir");
     let mnist_dir = workspace_root().join("integration-tests/fixtures/models/mnist");
-    std::fs::copy(mnist_dir.join("model.onnx"), tmp.path().join("model.onnx"))
-        .expect("Failed to copy model.onnx");
+    let mnist_onnx = mnist_dir.join("model.onnx");
+    if !mnist_onnx.exists() {
+        eprintln!("Skipping test: mnist model.onnx not downloaded");
+        eprintln!("Run: ./integration-tests/download.sh mnist");
+        return;
+    }
+    let tmp = tempfile::tempdir().expect("Failed to create temp dir");
+    std::fs::copy(&mnist_onnx, tmp.path().join("model.onnx")).expect("Failed to copy model.onnx");
 
     let output = Command::new(xybrid_bin())
         .args(["init", "--json", "--yes"])
@@ -120,10 +125,15 @@ fn test_init_json_implies_yes() {
     // --json should imply --yes (non-interactive), so it should not hang
     // on ambiguous models. We test this by running on a fixture without
     // --yes explicitly — if it hangs, the test will timeout.
-    let tmp = tempfile::tempdir().expect("Failed to create temp dir");
     let mnist_dir = workspace_root().join("integration-tests/fixtures/models/mnist");
-    std::fs::copy(mnist_dir.join("model.onnx"), tmp.path().join("model.onnx"))
-        .expect("Failed to copy model.onnx");
+    let mnist_onnx = mnist_dir.join("model.onnx");
+    if !mnist_onnx.exists() {
+        eprintln!("Skipping test: mnist model.onnx not downloaded");
+        eprintln!("Run: ./integration-tests/download.sh mnist");
+        return;
+    }
+    let tmp = tempfile::tempdir().expect("Failed to create temp dir");
+    std::fs::copy(&mnist_onnx, tmp.path().join("model.onnx")).expect("Failed to copy model.onnx");
 
     let output = Command::new(xybrid_bin())
         .args(["init", "--json"]) // no --yes, but --json implies it
