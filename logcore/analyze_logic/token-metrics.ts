@@ -5,9 +5,11 @@ export interface PricePoint {
 
 export interface TokenMetrics {
   averagePrice: number
-  volatility: number      // standard deviation (sample)
+  volatility: number
   maxPrice: number
   minPrice: number
+  returnsVolatility: number
+  priceChange: number
 }
 
 export class TokenAnalysisCalculator {
@@ -15,45 +17,71 @@ export class TokenAnalysisCalculator {
 
   constructor(data: PricePoint[]) {
     this.data = (data || [])
-      .filter(p => Number.isFinite(p?.timestamp) && Number.isFinite(p?.price))
+      .filter(p => Number.isFinite(p?.timestamp) && Number.isFinite(p?.price) && p.price > 0)
       .sort((a, b) => a.timestamp - b.timestamp)
   }
 
-  getAveragePrice(): number {
-    const n = this.data.length
-    if (n === 0) return 0
-    const sum = this.data.reduce((acc, p) => acc + p.price, 0)
-    return sum / n
-  }
-
-  getVolatility(): number {
-    const n = this.data.length
-    if (n < 2) return 0
-    const avg = this.getAveragePrice()
-    const variance = this.data.reduce((acc, p) => acc + (p.price - avg) ** 2, 0) / (n - 1) // sample std
-    return Math.sqrt(variance)
-  }
-
-  getMaxPrice(): number {
-    if (this.data.length === 0) return 0
-    let max = -Infinity
-    for (const p of this.data) if (p.price > max) max = p.price
-    return Number.isFinite(max) ? max : 0
-  }
-
-  getMinPrice(): number {
-    if (this.data.length === 0) return 0
-    let min = Infinity
-    for (const p of this.data) if (p.price < min) min = p.price
-    return Number.isFinite(min) ? min : 0
-  }
-
   computeMetrics(): TokenMetrics {
+    const n = this.data.length
+
+    if (n === 0) {
+      return {
+        averagePrice: 0,
+        volatility: 0,
+        maxPrice: 0,
+        minPrice: 0,
+        returnsVolatility: 0,
+        priceChange: 0
+      }
+    }
+
+    let mean = 0
+    let m2 = 0
+    let max = -Infinity
+    let min = Infinity
+
+    let prevPrice = this.data[0].price
+    let returnsM2 = 0
+    let returnsMean = 0
+    let returnsCount = 0
+
+    for (let i = 0; i < n; i++) {
+      const price = this.data[i].price
+
+      // Welford for price volatility
+      const delta = price - mean
+      mean += delta / (i + 1)
+      m2 += delta * (price - mean)
+
+      if (price > max) max = price
+      if (price < min) min = price
+
+      // returns volatility (log returns)
+      if (i > 0) {
+        const logReturn = Math.log(price / prevPrice)
+
+        returnsCount++
+        const deltaR = logReturn - returnsMean
+        returnsMean += deltaR / returnsCount
+        returnsM2 += deltaR * (logReturn - returnsMean)
+      }
+
+      prevPrice = price
+    }
+
+    const variance = n > 1 ? m2 / (n - 1) : 0
+    const returnsVariance = returnsCount > 1 ? returnsM2 / (returnsCount - 1) : 0
+
+    const firstPrice = this.data[0].price
+    const lastPrice = this.data[n - 1].price
+
     return {
-      averagePrice: this.getAveragePrice(),
-      volatility: this.getVolatility(),
-      maxPrice: this.getMaxPrice(),
-      minPrice: this.getMinPrice(),
+      averagePrice: mean,
+      volatility: Math.sqrt(variance),
+      maxPrice: Number.isFinite(max) ? max : 0,
+      minPrice: Number.isFinite(min) ? min : 0,
+      returnsVolatility: Math.sqrt(returnsVariance),
+      priceChange: firstPrice > 0 ? (lastPrice - firstPrice) / firstPrice : 0
     }
   }
 }
