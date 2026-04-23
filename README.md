@@ -1,5 +1,5 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/ApeVisar/ApevisorAI/main/apevisor-removebg-preview.png" width="300"/>
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv<p align="center">
+  <img src="https://github.com/Apevisor/-ApevisorAgents/blob/master/apevisor_recolored.png" width="300"/>
 </p>
 <h1 align="center">Apevisor</h1>
 <div align="center">
