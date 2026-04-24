@@ -19,14 +19,6 @@ ort-android/
     └── libc++_shared.so     # 1.7 MB — C++ standard library
 ```
 
-## Usage
-
-These libraries are referenced by symlinks from:
-- `bindings/flutter/android/src/main/jniLibs/{abi}/` — Flutter SDK
-- `bindings/kotlin/libs/{abi}/` — Kotlin SDK
-
-The `cargo xtask build-android` command also copies these libraries to the Kotlin SDK output.
-
 ## Updating the Libraries
 
 1. Download the new ORT Android release from [GitHub onnxruntime releases](https://github.com/microsoft/onnxruntime/releases)
